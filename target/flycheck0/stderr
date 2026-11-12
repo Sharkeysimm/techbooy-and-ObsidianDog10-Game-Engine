@@ -1,0 +1,1446 @@
+   0.231902500s  INFO prepare_target{force=false package_id=game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine) target="game_engine"}: cargo::core::compiler::fingerprint: stale: missing "C:\\Users\\harry\\Documents\\GitHub\\techbooy-and-ObsidianDog10-Game-Engine\\target\\debug\\.fingerprint\\windows-link-c9a7f2656e8426d2\\dep-lib-windows_link"
+   0.263628900s  INFO prepare_target{force=false package_id=game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine) target="game_engine"}: cargo::core::compiler::fingerprint: fingerprint error for game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine)/Check { test: false }/TargetInner { name: "game_engine", doc: true, ..: with_path("C:\\Users\\harry\\Documents\\GitHub\\techbooy-and-ObsidianDog10-Game-Engine\\src\\main.rs", Edition2024) }
+   0.263690500s  INFO prepare_target{force=false package_id=game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine) target="game_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\game_engine-ca3ba5e194478fe4\bin-game_engine`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_libgit2_prerelease
+  11: <unknown>
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: git_midx_writer_dump
+  16: git_filter_source_repo
+  17: git_midx_writer_dump
+  18: BaseThreadInitThunk
+  19: RtlUserThreadStart
+   0.293638700s  INFO prepare_target{force=false package_id=easy-imgui-window v0.8.0 target="easy_imgui_window"}: cargo::core::compiler::fingerprint: fingerprint error for easy-imgui-window v0.8.0/Check { test: false }/TargetInner { ..: lib_target("easy_imgui_window", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\easy-imgui-window-0.8.0\\src\\lib.rs", Edition2021) }
+   0.293676000s  INFO prepare_target{force=false package_id=easy-imgui-window v0.8.0 target="easy_imgui_window"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\easy-imgui-window-8fb90006c8ea64ec\lib-easy_imgui_window`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_libgit2_prerelease
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: git_midx_writer_dump
+  17: git_filter_source_repo
+  18: git_midx_writer_dump
+  19: BaseThreadInitThunk
+  20: RtlUserThreadStart
+   0.295798500s  INFO prepare_target{force=false package_id=anyhow v1.0.104 target="anyhow"}: cargo::core::compiler::fingerprint: fingerprint error for anyhow v1.0.104/Check { test: false }/TargetInner { ..: lib_target("anyhow", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\anyhow-1.0.104\\src\\lib.rs", Edition2021) }
+   0.295839100s  INFO prepare_target{force=false package_id=anyhow v1.0.104 target="anyhow"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\anyhow-e34b32642adaf049\lib-anyhow`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.299019500s  INFO prepare_target{force=false package_id=arboard v3.7.0 target="arboard"}: cargo::core::compiler::fingerprint: fingerprint error for arboard v3.7.0/Check { test: false }/TargetInner { ..: lib_target("arboard", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\arboard-3.7.0\\src\\lib.rs", Edition2021) }
+   0.299593700s  INFO prepare_target{force=false package_id=arboard v3.7.0 target="arboard"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\arboard-a7a5e206f6de30ab\lib-arboard`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.303011200s  INFO prepare_target{force=false package_id=clipboard-win v5.4.3 target="clipboard_win"}: cargo::core::compiler::fingerprint: fingerprint error for clipboard-win v5.4.3/Check { test: false }/TargetInner { ..: lib_target("clipboard_win", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\clipboard-win-5.4.3\\src\\lib.rs", Edition2018) }
+   0.303053400s  INFO prepare_target{force=false package_id=clipboard-win v5.4.3 target="clipboard_win"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\clipboard-win-eb058092e611cef6\lib-clipboard_win`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.305649300s  INFO prepare_target{force=false package_id=error-code v3.4.0 target="error_code"}: cargo::core::compiler::fingerprint: fingerprint error for error-code v3.4.0/Check { test: false }/TargetInner { ..: lib_target("error_code", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\error-code-3.4.0\\src\\lib.rs", Edition2018) }
+   0.305706500s  INFO prepare_target{force=false package_id=error-code v3.4.0 target="error_code"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\error-code-171ea2f988e53f30\lib-error_code`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.307351300s  INFO prepare_target{force=false package_id=log v0.4.35 target="log"}: cargo::core::compiler::fingerprint: fingerprint error for log v0.4.35/Check { test: false }/TargetInner { ..: lib_target("log", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\log-0.4.35\\src\\lib.rs", Edition2021) }
+   0.307418000s  INFO prepare_target{force=false package_id=log v0.4.35 target="log"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\log-45f030e5da37fa5a\lib-log`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.308931100s  INFO prepare_target{force=false package_id=windows-sys v0.61.2 target="windows_sys"}: cargo::core::compiler::fingerprint: fingerprint error for windows-sys v0.61.2/Check { test: false }/TargetInner { tested: false, doctest: false, ..: lib_target("windows_sys", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\windows-sys-0.61.2\\src\\lib.rs", Edition2021) }
+   0.309138000s  INFO prepare_target{force=false package_id=windows-sys v0.61.2 target="windows_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\windows-sys-0c1e343cb0b18dfa\lib-windows_sys`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.310489900s  INFO prepare_target{force=false package_id=windows-link v0.2.1 target="windows_link"}: cargo::core::compiler::fingerprint: fingerprint error for windows-link v0.2.1/Check { test: false }/TargetInner { ..: lib_target("windows_link", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\windows-link-0.2.1\\src\\lib.rs", Edition2021) }
+   0.310520700s  INFO prepare_target{force=false package_id=windows-link v0.2.1 target="windows_link"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\windows-link-c9a7f2656e8426d2\lib-windows_link`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.313649800s  INFO prepare_target{force=false package_id=bitflags v2.13.2 target="bitflags"}: cargo::core::compiler::fingerprint: fingerprint error for bitflags v2.13.2/Check { test: false }/TargetInner { ..: lib_target("bitflags", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\bitflags-2.13.2\\src\\lib.rs", Edition2021) }
+   0.313689500s  INFO prepare_target{force=false package_id=bitflags v2.13.2 target="bitflags"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\bitflags-974e0e5d8c4aedf8\lib-bitflags`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.314466000s  INFO prepare_target{force=false package_id=easy-imgui v0.8.0 target="easy_imgui"}: cargo::core::compiler::fingerprint: fingerprint error for easy-imgui v0.8.0/Check { test: false }/TargetInner { ..: lib_target("easy_imgui", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\easy-imgui-0.8.0\\src\\lib.rs", Edition2021) }
+   0.314494400s  INFO prepare_target{force=false package_id=easy-imgui v0.8.0 target="easy_imgui"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\easy-imgui-542bf06d1ac00dab\lib-easy_imgui`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.316811900s  INFO prepare_target{force=false package_id=cgmath v0.18.0 target="cgmath"}: cargo::core::compiler::fingerprint: fingerprint error for cgmath v0.18.0/Check { test: false }/TargetInner { ..: lib_target("cgmath", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\cgmath-0.18.0\\src\\lib.rs", Edition2015) }
+   0.316852600s  INFO prepare_target{force=false package_id=cgmath v0.18.0 target="cgmath"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\cgmath-edf04a2c712c2781\lib-cgmath`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.317853800s  INFO prepare_target{force=false package_id=approx v0.4.0 target="approx"}: cargo::core::compiler::fingerprint: fingerprint error for approx v0.4.0/Check { test: false }/TargetInner { ..: lib_target("approx", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\approx-0.4.0\\src\\lib.rs", Edition2015) }
+   0.317886500s  INFO prepare_target{force=false package_id=approx v0.4.0 target="approx"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\approx-1c60ddb0b2501de6\lib-approx`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.318571700s  INFO prepare_target{force=false package_id=num-traits v0.2.19 target="num_traits"}: cargo::core::compiler::fingerprint: fingerprint error for num-traits v0.2.19/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("num_traits", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\num-traits-0.2.19\\src\\lib.rs", Edition2021) }
+   0.318602600s  INFO prepare_target{force=false package_id=num-traits v0.2.19 target="num_traits"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\num-traits-2815add6067d10a5\lib-num_traits`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_libgit2_prerelease
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: git_midx_writer_dump
+  21: git_filter_source_repo
+  22: git_midx_writer_dump
+  23: BaseThreadInitThunk
+  24: RtlUserThreadStart
+   0.326562000s  INFO prepare_target{force=false package_id=mint v0.5.9 target="mint"}: cargo::core::compiler::fingerprint: fingerprint error for mint v0.5.9/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("mint", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\mint-0.5.9\\src\\lib.rs", Edition2018) }
+   0.326599800s  INFO prepare_target{force=false package_id=mint v0.5.9 target="mint"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\mint-c55112aba888119d\lib-mint`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.327194500s  INFO prepare_target{force=false package_id=easy-imgui-sys v0.8.0 target="easy_imgui_sys"}: cargo::core::compiler::fingerprint: fingerprint error for easy-imgui-sys v0.8.0/Check { test: false }/TargetInner { ..: lib_target("easy_imgui_sys", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\easy-imgui-sys-0.8.0\\src\\lib.rs", Edition2021) }
+   0.327220500s  INFO prepare_target{force=false package_id=easy-imgui-sys v0.8.0 target="easy_imgui_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\easy-imgui-sys-83a0b2752fe2dc62\lib-easy_imgui_sys`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.331075000s  INFO prepare_target{force=false package_id=easy-imgui-sys v0.8.0 target="build-script-build"}: cargo::core::compiler::fingerprint: fingerprint error for easy-imgui-sys v0.8.0/RunCustomBuild/TargetInner { ..: custom_build_target("build-script-build", "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\easy-imgui-sys-0.8.0\\build.rs", Edition2021) }
+   0.331113400s  INFO prepare_target{force=false package_id=easy-imgui-sys v0.8.0 target="build-script-build"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\easy-imgui-sys-c22b5d10c7846acf\run-build-script-build-script-build`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_libgit2_prerelease
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: git_midx_writer_dump
+  21: git_filter_source_repo
+  22: git_midx_writer_dump
+  23: BaseThreadInitThunk
+  24: RtlUserThreadStart
+   0.357703200s  INFO prepare_target{force=false package_id=image v0.25.10 target="image"}: cargo::core::compiler::fingerprint: fingerprint error for image v0.25.10/Check { test: false }/TargetInner { ..: lib_target("image", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\image-0.25.10\\src\\lib.rs", Edition2021) }
+   0.357748500s  INFO prepare_target{force=false package_id=image v0.25.10 target="image"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\image-a1fbc7794dfcd35a\lib-image`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.358531800s  INFO prepare_target{force=false package_id=bytemuck v1.25.2 target="bytemuck"}: cargo::core::compiler::fingerprint: fingerprint error for bytemuck v1.25.2/Check { test: false }/TargetInner { ..: lib_target("bytemuck", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\bytemuck-1.25.2\\src\\lib.rs", Edition2018) }
+   0.358562500s  INFO prepare_target{force=false package_id=bytemuck v1.25.2 target="bytemuck"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\bytemuck-14450daae10cdec8\lib-bytemuck`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.359290200s  INFO prepare_target{force=false package_id=byteorder-lite v0.1.0 target="byteorder_lite"}: cargo::core::compiler::fingerprint: fingerprint error for byteorder-lite v0.1.0/Check { test: false }/TargetInner { name_inferred: true, benched: false, ..: lib_target("byteorder_lite", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\byteorder-lite-0.1.0\\src\\lib.rs", Edition2021) }
+   0.359316000s  INFO prepare_target{force=false package_id=byteorder-lite v0.1.0 target="byteorder_lite"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\byteorder-lite-dd09586b2a36a6b3\lib-byteorder_lite`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.359948600s  INFO prepare_target{force=false package_id=moxcms v0.8.1 target="moxcms"}: cargo::core::compiler::fingerprint: fingerprint error for moxcms v0.8.1/Check { test: false }/TargetInner { ..: lib_target("moxcms", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\moxcms-0.8.1\\src\\lib.rs", Edition2024) }
+   0.359977100s  INFO prepare_target{force=false package_id=moxcms v0.8.1 target="moxcms"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\moxcms-7d683d8466a8fc99\lib-moxcms`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.360547100s  INFO prepare_target{force=false package_id=pxfm v0.1.30 target="pxfm"}: cargo::core::compiler::fingerprint: fingerprint error for pxfm v0.1.30/Check { test: false }/TargetInner { ..: lib_target("pxfm", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\pxfm-0.1.30\\src\\lib.rs", Edition2024) }
+   0.360571900s  INFO prepare_target{force=false package_id=pxfm v0.1.30 target="pxfm"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\pxfm-d529ba540570d243\lib-pxfm`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_libgit2_prerelease
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: git_midx_writer_dump
+  21: git_filter_source_repo
+  22: git_midx_writer_dump
+  23: BaseThreadInitThunk
+  24: RtlUserThreadStart
+   0.364555500s  INFO prepare_target{force=false package_id=easy-imgui-renderer v0.8.0 target="easy_imgui_renderer"}: cargo::core::compiler::fingerprint: fingerprint error for easy-imgui-renderer v0.8.0/Check { test: false }/TargetInner { ..: lib_target("easy_imgui_renderer", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\easy-imgui-renderer-0.8.0\\src\\lib.rs", Edition2021) }
+   0.364595700s  INFO prepare_target{force=false package_id=easy-imgui-renderer v0.8.0 target="easy_imgui_renderer"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\easy-imgui-renderer-547e1850b89a9881\lib-easy_imgui_renderer`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.367203500s  INFO prepare_target{force=false package_id=glow v0.14.2 target="glow"}: cargo::core::compiler::fingerprint: fingerprint error for glow v0.14.2/Check { test: false }/TargetInner { ..: lib_target("glow", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\glow-0.14.2\\src\\lib.rs", Edition2021) }
+   0.367510800s  INFO prepare_target{force=false package_id=glow v0.14.2 target="glow"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\glow-c5466b6ba4f7dc69\lib-glow`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.370979900s  INFO prepare_target{force=false package_id=smallvec v1.16.5 target="smallvec"}: cargo::core::compiler::fingerprint: fingerprint error for smallvec v1.16.5/Check { test: false }/TargetInner { ..: lib_target("smallvec", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\smallvec-1.16.5\\src\\lib.rs", Edition2018) }
+   0.371111100s  INFO prepare_target{force=false package_id=smallvec v1.16.5 target="smallvec"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\smallvec-270ed1bba4998910\lib-smallvec`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.376392000s  INFO prepare_target{force=false package_id=glutin v0.32.3 target="glutin"}: cargo::core::compiler::fingerprint: fingerprint error for glutin v0.32.3/Check { test: false }/TargetInner { ..: lib_target("glutin", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\glutin-0.32.3\\src\\lib.rs", Edition2021) }
+   0.376447900s  INFO prepare_target{force=false package_id=glutin v0.32.3 target="glutin"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\glutin-37ce186d41684426\lib-glutin`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.383256400s  INFO prepare_target{force=false package_id=glutin_egl_sys v0.7.1 target="glutin_egl_sys"}: cargo::core::compiler::fingerprint: fingerprint error for glutin_egl_sys v0.7.1/Check { test: false }/TargetInner { ..: lib_target("glutin_egl_sys", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\glutin_egl_sys-0.7.1\\src\\lib.rs", Edition2021) }
+   0.383302500s  INFO prepare_target{force=false package_id=glutin_egl_sys v0.7.1 target="glutin_egl_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\glutin_egl_sys-609b02520f2d9b89\lib-glutin_egl_sys`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.389118900s  INFO prepare_target{force=false package_id=windows-sys v0.52.0 target="windows_sys"}: cargo::core::compiler::fingerprint: fingerprint error for windows-sys v0.52.0/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("windows_sys", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\windows-sys-0.52.0\\src\\lib.rs", Edition2021) }
+   0.389151500s  INFO prepare_target{force=false package_id=windows-sys v0.52.0 target="windows_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\windows-sys-113c45f563c7cb0d\lib-windows_sys`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.390437100s  INFO prepare_target{force=false package_id=windows-targets v0.52.6 target="windows_targets"}: cargo::core::compiler::fingerprint: fingerprint error for windows-targets v0.52.6/Check { test: false }/TargetInner { ..: lib_target("windows_targets", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\windows-targets-0.52.6\\src\\lib.rs", Edition2021) }
+   0.390506800s  INFO prepare_target{force=false package_id=windows-targets v0.52.6 target="windows_targets"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\windows-targets-b65d8b4d56f5bcf3\lib-windows_targets`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_libgit2_prerelease
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: git_midx_writer_dump
+  21: git_filter_source_repo
+  22: git_midx_writer_dump
+  23: BaseThreadInitThunk
+  24: RtlUserThreadStart
+   0.391422800s  INFO prepare_target{force=false package_id=windows_x86_64_msvc v0.52.6 target="windows_x86_64_msvc"}: cargo::core::compiler::fingerprint: fingerprint error for windows_x86_64_msvc v0.52.6/Check { test: false }/TargetInner { ..: lib_target("windows_x86_64_msvc", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\windows_x86_64_msvc-0.52.6\\src\\lib.rs", Edition2021) }
+   0.391457500s  INFO prepare_target{force=false package_id=windows_x86_64_msvc v0.52.6 target="windows_x86_64_msvc"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\windows_x86_64_msvc-e8a0ebb312162e44\lib-windows_x86_64_msvc`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_filter_source_repo
+  16: git_libgit2_prerelease
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: <unknown>
+  21: git_midx_writer_dump
+  22: git_filter_source_repo
+  23: git_midx_writer_dump
+  24: BaseThreadInitThunk
+  25: RtlUserThreadStart
+   0.393628600s  INFO prepare_target{force=false package_id=glutin_wgl_sys v0.6.1 target="glutin_wgl_sys"}: cargo::core::compiler::fingerprint: fingerprint error for glutin_wgl_sys v0.6.1/Check { test: false }/TargetInner { ..: lib_target("glutin_wgl_sys", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\glutin_wgl_sys-0.6.1\\src\\lib.rs", Edition2021) }
+   0.393661100s  INFO prepare_target{force=false package_id=glutin_wgl_sys v0.6.1 target="glutin_wgl_sys"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\glutin_wgl_sys-3f0060827baf337b\lib-glutin_wgl_sys`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.396296900s  INFO prepare_target{force=false package_id=libloading v0.8.9 target="libloading"}: cargo::core::compiler::fingerprint: fingerprint error for libloading v0.8.9/Check { test: false }/TargetInner { ..: lib_target("libloading", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\libloading-0.8.9\\src\\lib.rs", Edition2015) }
+   0.396337000s  INFO prepare_target{force=false package_id=libloading v0.8.9 target="libloading"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\libloading-3c933dfd826bdfde\lib-libloading`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.397045100s  INFO prepare_target{force=false package_id=once_cell v1.21.4 target="once_cell"}: cargo::core::compiler::fingerprint: fingerprint error for once_cell v1.21.4/Check { test: false }/TargetInner { ..: lib_target("once_cell", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\once_cell-1.21.4\\src\\lib.rs", Edition2021) }
+   0.397077200s  INFO prepare_target{force=false package_id=once_cell v1.21.4 target="once_cell"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\once_cell-57bd15b268b903eb\lib-once_cell`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.397622200s  INFO prepare_target{force=false package_id=raw-window-handle v0.6.2 target="raw_window_handle"}: cargo::core::compiler::fingerprint: fingerprint error for raw-window-handle v0.6.2/Check { test: false }/TargetInner { ..: lib_target("raw_window_handle", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\raw-window-handle-0.6.2\\src\\lib.rs", Edition2021) }
+   0.397649100s  INFO prepare_target{force=false package_id=raw-window-handle v0.6.2 target="raw_window_handle"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\raw-window-handle-08b8d8173a5346be\lib-raw_window_handle`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.398224700s  INFO prepare_target{force=false package_id=glutin-winit v0.5.0 target="glutin_winit"}: cargo::core::compiler::fingerprint: fingerprint error for glutin-winit v0.5.0/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("glutin_winit", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\glutin-winit-0.5.0\\src\\lib.rs", Edition2021) }
+   0.398267100s  INFO prepare_target{force=false package_id=glutin-winit v0.5.0 target="glutin_winit"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\glutin-winit-b7f888095b415979\lib-glutin_winit`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_libgit2_prerelease
+  13: <unknown>
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: git_midx_writer_dump
+  18: git_filter_source_repo
+  19: git_midx_writer_dump
+  20: BaseThreadInitThunk
+  21: RtlUserThreadStart
+   0.400937400s  INFO prepare_target{force=false package_id=winit v0.30.13 target="winit"}: cargo::core::compiler::fingerprint: fingerprint error for winit v0.30.13/Check { test: false }/TargetInner { ..: lib_target("winit", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\winit-0.30.13\\src\\lib.rs", Edition2021) }
+   0.400965900s  INFO prepare_target{force=false package_id=winit v0.30.13 target="winit"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\winit-0836084954f60fce\lib-winit`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_libgit2_prerelease
+  14: <unknown>
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: git_midx_writer_dump
+  19: git_filter_source_repo
+  20: git_midx_writer_dump
+  21: BaseThreadInitThunk
+  22: RtlUserThreadStart
+   0.402033700s  INFO prepare_target{force=false package_id=cursor-icon v1.2.0 target="cursor_icon"}: cargo::core::compiler::fingerprint: fingerprint error for cursor-icon v1.2.0/Check { test: false }/TargetInner { ..: lib_target("cursor_icon", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\cursor-icon-1.2.0\\src\\lib.rs", Edition2021) }
+   0.402068100s  INFO prepare_target{force=false package_id=cursor-icon v1.2.0 target="cursor_icon"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\cursor-icon-63494a24c5074810\lib-cursor_icon`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.403330700s  INFO prepare_target{force=false package_id=dpi v0.1.2 target="dpi"}: cargo::core::compiler::fingerprint: fingerprint error for dpi v0.1.2/Check { test: false }/TargetInner { ..: lib_target("dpi", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\dpi-0.1.2\\src\\lib.rs", Edition2021) }
+   0.403366400s  INFO prepare_target{force=false package_id=dpi v0.1.2 target="dpi"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\dpi-65e03b5e0ce81854\lib-dpi`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.404245900s  INFO prepare_target{force=false package_id=smol_str v0.2.2 target="smol_str"}: cargo::core::compiler::fingerprint: fingerprint error for smol_str v0.2.2/Check { test: false }/TargetInner { name_inferred: true, ..: lib_target("smol_str", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\smol_str-0.2.2\\src\\lib.rs", Edition2018) }
+   0.404285900s  INFO prepare_target{force=false package_id=smol_str v0.2.2 target="smol_str"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\smol_str-b19f12a2f46bada7\lib-smol_str`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.404923100s  INFO prepare_target{force=false package_id=tracing v0.1.44 target="tracing"}: cargo::core::compiler::fingerprint: fingerprint error for tracing v0.1.44/Check { test: false }/TargetInner { ..: lib_target("tracing", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\tracing-0.1.44\\src\\lib.rs", Edition2018) }
+   0.404951200s  INFO prepare_target{force=false package_id=tracing v0.1.44 target="tracing"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\tracing-76703b2f226289a8\lib-tracing`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.405525000s  INFO prepare_target{force=false package_id=pin-project-lite v0.2.17 target="pin_project_lite"}: cargo::core::compiler::fingerprint: fingerprint error for pin-project-lite v0.2.17/Check { test: false }/TargetInner { doc_scrape_examples: Disabled, ..: lib_target("pin_project_lite", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\pin-project-lite-0.2.17\\src\\lib.rs", Edition2018) }
+   0.405551000s  INFO prepare_target{force=false package_id=pin-project-lite v0.2.17 target="pin_project_lite"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\pin-project-lite-06cde75fae409711\lib-pin_project_lite`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_libgit2_prerelease
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: git_midx_writer_dump
+  21: git_filter_source_repo
+  22: git_midx_writer_dump
+  23: BaseThreadInitThunk
+  24: RtlUserThreadStart
+   0.406050800s  INFO prepare_target{force=false package_id=tracing-core v0.1.36 target="tracing_core"}: cargo::core::compiler::fingerprint: fingerprint error for tracing-core v0.1.36/Check { test: false }/TargetInner { ..: lib_target("tracing_core", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\tracing-core-0.1.36\\src\\lib.rs", Edition2018) }
+   0.406078000s  INFO prepare_target{force=false package_id=tracing-core v0.1.36 target="tracing_core"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\tracing-core-1dd4a26231253859\lib-tracing_core`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_filter_source_repo
+  15: git_libgit2_prerelease
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: <unknown>
+  20: git_midx_writer_dump
+  21: git_filter_source_repo
+  22: git_midx_writer_dump
+  23: BaseThreadInitThunk
+  24: RtlUserThreadStart
+   0.406923300s  INFO prepare_target{force=false package_id=unicode-segmentation v1.13.3 target="unicode_segmentation"}: cargo::core::compiler::fingerprint: fingerprint error for unicode-segmentation v1.13.3/Check { test: false }/TargetInner { ..: lib_target("unicode_segmentation", ["lib"], "C:\\Users\\harry\\.cargo\\registry\\src\\index.crates.io-1949cf8c6b5b557f\\unicode-segmentation-1.13.3\\src\\lib.rs", Edition2018) }
+   0.406950100s  INFO prepare_target{force=false package_id=unicode-segmentation v1.13.3 target="unicode_segmentation"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\unicode-segmentation-492171080fd08dd9\lib-unicode_segmentation`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_filter_source_repo
+  11: git_filter_source_repo
+  12: git_filter_source_repo
+  13: git_filter_source_repo
+  14: git_libgit2_prerelease
+  15: <unknown>
+  16: <unknown>
+  17: <unknown>
+  18: <unknown>
+  19: git_midx_writer_dump
+  20: git_filter_source_repo
+  21: git_midx_writer_dump
+  22: BaseThreadInitThunk
+  23: RtlUserThreadStart
+   0.409487100s  INFO prepare_target{force=false package_id=game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine) target="game_engine"}: cargo::core::compiler::fingerprint: fingerprint error for game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine)/Check { test: true }/TargetInner { name: "game_engine", doc: true, ..: with_path("C:\\Users\\harry\\Documents\\GitHub\\techbooy-and-ObsidianDog10-Game-Engine\\src\\main.rs", Edition2024) }
+   0.409526600s  INFO prepare_target{force=false package_id=game_engine v0.1.0 (C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine) target="game_engine"}: cargo::core::compiler::fingerprint:     err: failed to read `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\.fingerprint\game_engine-8f71714e72a6ac0a\test-bin-game_engine`
+
+Caused by:
+    The system cannot find the file specified. (os error 2)
+
+Stack backtrace:
+   0: git_midx_writer_dump
+   1: git_midx_writer_dump
+   2: git_midx_writer_dump
+   3: git_midx_writer_dump
+   4: git_filter_source_repo
+   5: git_filter_source_repo
+   6: git_filter_source_repo
+   7: git_filter_source_repo
+   8: git_filter_source_repo
+   9: git_filter_source_repo
+  10: git_libgit2_prerelease
+  11: <unknown>
+  12: <unknown>
+  13: <unknown>
+  14: <unknown>
+  15: git_midx_writer_dump
+  16: git_filter_source_repo
+  17: git_midx_writer_dump
+  18: BaseThreadInitThunk
+  19: RtlUserThreadStart
+    Checking mint v0.5.9
+    Checking num-traits v0.2.19
+    Checking windows_x86_64_msvc v0.52.6
+    Checking bitflags v2.13.2
+    Checking windows-link v0.2.1
+    Checking pxfm v0.1.30
+    Checking bytemuck v1.25.2
+    Checking byteorder-lite v0.1.0
+    Checking tracing-core v0.1.36
+    Checking raw-window-handle v0.6.2
+    Checking pin-project-lite v0.2.17
+   Compiling easy-imgui-sys v0.8.0
+    Checking windows-targets v0.52.6
+    Checking libloading v0.8.9
+    Checking glutin_wgl_sys v0.6.1
+    Checking windows-sys v0.52.0
+    Checking cursor-icon v1.2.0
+    Checking once_cell v1.21.4
+    Checking dpi v0.1.2
+    Checking tracing v0.1.44
+    Checking unicode-segmentation v1.13.3
+    Checking smol_str v0.2.2
+    Checking approx v0.4.0
+    Checking error-code v3.4.0
+    Checking log v0.4.35
+    Checking anyhow v1.0.104
+    Checking cgmath v0.18.0
+    Checking windows-sys v0.61.2
+    Checking glow v0.14.2
+    Checking smallvec v1.16.5
+    Checking clipboard-win v5.4.3
+    Checking moxcms v0.8.1
+    Checking arboard v3.7.0
+error: failed to run custom build command for `easy-imgui-sys v0.8.0`
+note: To improve backtraces for build dependencies, set the CARGO_PROFILE_DEV_BUILD_OVERRIDE_DEBUG=true environment variable to enable debug information generation.
+
+Caused by:
+  process didn't exit successfully: `C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\build\easy-imgui-sys-44578db8c813c5d1\build-script-build` (exit code: 101)
+  --- stdout
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui.h
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui_internal.h
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imstb_textedit.h
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imstb_rectpack.h
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imstb_truetype.h
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui_widgets.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui_draw.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui_tables.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\imgui_demo.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\misc/freetype\imgui_freetype.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui\misc/freetype\imgui_freetype.h
+  cargo:THIRD_PARTY=C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\build\easy-imgui-sys-c22b5d10c7846acf\out\imgui_src
+  cargo:rerun-if-changed=wrapper.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui/imgui.cpp
+  cargo:rerun-if-changed=C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\easy-imgui-sys-0.8.0\imgui/imgui.h
+  cargo:rerun-if-changed=msvc_blocklist.txt
+  cargo:rerun-if-changed=hack_msvc.cpp
+
+  --- stderr
+
+  thread 'main' (32464) panicked at C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\bindgen-0.70.1\lib.rs:622:27:
+  Unable to find libclang: "couldn't find any valid shared libraries matching: ['clang.dll', 'libclang.dll'], set the `LIBCLANG_PATH` environment variable to a path where one of these files can be found (invalid: [])"
+  stack backtrace:
+     0: std::panicking::panic_handler
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\panicking.rs:679
+     1: core::panicking::panic_fmt
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\core\src\panicking.rs:80
+     2: core::result::unwrap_failed
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\core\src\result.rs:1870
+     3: <core::result::Result<(), alloc::string::String>>::expect
+     4: bindgen::ensure_libclang_is_loaded::{closure#0}
+     5: <std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::get_or_init::<bindgen::ensure_libclang_is_loaded::{closure#0}>::{closure#0}
+     6: <std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::initialize::<<std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::get_or_init<bindgen::ensure_libclang_is_loaded::{closure#0}>::{closure#0}, !>::{closure#0}
+     7: RNCINvMs0_NtNtCse0R8cuyqEa_3std4sync4onceNtB8_4Once15call_once_forceNCINvMNtBa_9once_lockINtB1a_8OnceLockINtNtCsfQUUnEvlYZE_5alloc4sync3ArcNtCs88ml68sz1gb_9clang_sys13SharedLibraryEE10initializeNCINvB19_11get_or_initNCNvCs3iLbdDAXYz6_7bindgen25ensure_libcl
+     8: std::sys::sync::once::futex::Once::call
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\sys\sync\once\futex.rs:183
+     9: RINvMs0_NtNtCse0R8cuyqEa_3std4sync4onceNtB6_4Once15call_once_forceNCINvMNtB8_9once_lockINtB18_8OnceLockINtNtCsfQUUnEvlYZE_5alloc4sync3ArcNtCs88ml68sz1gb_9clang_sys13SharedLibraryEE10initializeNCINvB17_11get_or_initNCNvCs3iLbdDAXYz6_7bindgen25ensure_libclan
+    10: <std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::initialize::<<std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::get_or_init<bindgen::ensure_libclang_is_loaded::{closure#0}>::{closure#0}, !>
+    11: <std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::get_or_try_init::<<std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::get_or_init<bindgen::ensure_libclang_is_loaded::{closure#0}>::{closure#0}, !>
+    12: <std::sync::once_lock::OnceLock<alloc::sync::Arc<clang_sys::SharedLibrary>>>::get_or_init::<bindgen::ensure_libclang_is_loaded::{closure#0}>
+    13: bindgen::args_are_cpp
+    14: <bindgen::Bindings>::write
+    15: <bindgen::Builder>::generate
+    16: build_script_build::main
+    17: build_script_build::main
+    18: std::rt::lang_start::<()>
+    19: std::rt::lang_start::<()>
+    20: std::rt::lang_start_internal::closure$0
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\rt.rs:175
+    21: std::panicking::catch_unwind::do_call
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\panicking.rs:576
+    22: std::panicking::catch_unwind
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\panicking.rs:544
+    23: std::panic::catch_unwind
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\panic.rs:359
+    24: std::rt::lang_start_internal
+               at /rustc/48a229ceaefd4985c50990b14116b6d856af0985/library\std\src\rt.rs:171
+    25: std::rt::lang_start::<()>
+    26: main
+    27: invoke_main
+               at D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:78
+    28: __scrt_common_main_seh
+               at D:\a\_work\1\s\src\vctools\crt\vcstartup\src\startup\exe_common.inl:288
+    29: BaseThreadInitThunk
+    30: RtlUserThreadStart
+  note: Some details are omitted, run with `RUST_BACKTRACE=full` for a verbose backtrace.
+warning: build failed, waiting for other jobs to finish...
+    Checking glutin_egl_sys v0.7.1
+    Checking winit v0.30.13
+    Checking glutin v0.32.3
+    Checking image v0.25.10
+    Checking glutin-winit v0.5.0
