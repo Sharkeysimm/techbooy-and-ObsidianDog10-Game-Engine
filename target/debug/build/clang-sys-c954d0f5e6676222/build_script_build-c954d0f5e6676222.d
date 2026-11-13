@@ -1,9 +1,0 @@
-C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\build\clang-sys-c954d0f5e6676222\build_script_build-c954d0f5e6676222.d: C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\macros.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\common.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\dynamic.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\static.rs
-
-C:\Users\harry\Documents\GitHub\techbooy-and-ObsidianDog10-Game-Engine\target\debug\build\clang-sys-c954d0f5e6676222\build_script_build-c954d0f5e6676222.exe: C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\macros.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\common.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\dynamic.rs C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\static.rs
-
-C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build.rs:
-C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\macros.rs:
-C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\common.rs:
-C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\dynamic.rs:
-C:\Users\harry\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\clang-sys-1.9.1\build\static.rs:
