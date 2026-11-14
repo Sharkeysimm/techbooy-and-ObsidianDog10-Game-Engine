@@ -4,6 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+box2d-rust = "1.4.0"
 eframe = "0.31"
 egui_extras = { version = "0.31", features = ["all_loaders"] }
 image = { version = "0.25", features = ["png", "jpeg"] }
+rapier2d = "0.36.1"
