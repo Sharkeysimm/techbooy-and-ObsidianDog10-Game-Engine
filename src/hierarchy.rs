@@ -1,55 +1,92 @@
 use eframe::egui::{self, Align, Align2, Layout, Sense};
 
 use crate::drag::ObjectPayload;
-use crate::game_object::{ColliderShape, GameObject, PhysicsBody, PhysicsConfig};
+use crate::game_object::{GameObject, Shape};
 use crate::scene::Scene;
+
+#[derive(Clone, Copy)]
+enum CreateKind {
+    Empty,
+    Camera,
+    Shape(Shape),
+}
+
+struct RenameState {
+    id: u64,
+    buffer: String,
+    focused: bool,
+}
+
+#[derive(Default)]
+pub struct HierarchyState {
+    renaming: Option<RenameState>,
+}
 
 #[derive(Default)]
 struct Actions {
     select: Option<u64>,
     reparent: Option<(u64, Option<u64>)>,
     delete: Option<u64>,
-    attach_physics: Option<u64>,
-    attach_collider: Option<u64>,
+    create: Option<(CreateKind, Option<u64>)>,
+    rename: Option<(u64, String)>,
 }
 
-pub fn show(ctx: &egui::Context, scene: &mut Scene) {
+pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut HierarchyState) {
     let mut actions = Actions::default();
-    let mut add_square = false;
 
     egui::SidePanel::left("hierarchy")
         .resizable(true)
-        .default_width(180.0)
+        .default_width(190.0)
         .show(ctx, |ui| {
             ui.horizontal(|ui| {
                 ui.heading("Hierarchy");
                 ui.with_layout(Layout::right_to_left(Align::Center), |ui| {
-                    ui.menu_button("+", |ui| {
-                        if ui.button("Square").clicked() {
-                            add_square = true;
-                            ui.close_menu();
-                        }
-                    });
+                    ui.menu_button("+", |ui| create_items(ui, None, &mut actions));
                 });
             });
             ui.separator();
 
-            let header = egui::CollapsingHeader::new("Scene")
-                .default_open(true)
+            // added before the rows so rows sit on top of it
+            let background = ui.interact(
+                ui.available_rect_before_wrap(),
+                ui.id().with("hierarchy_background"),
+                Sense::click(),
+            );
+            background.context_menu(|ui| {
+                ui.menu_button("Create", |ui| create_items(ui, None, &mut actions));
+            });
+
+            egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .drag_to_scroll(false)
                 .show(ui, |ui| {
-                    for id in scene.children_of(None) {
-                        draw_node(ui, scene, id, &mut actions);
+                    let header = egui::CollapsingHeader::new("Scene")
+                        .default_open(true)
+                        .show(ui, |ui| {
+                            for id in scene.children_of(None) {
+                                draw_node(ui, scene, id, &mut actions, state);
+                            }
+                        });
+
+                    // dropping on the scene header unparents
+                    if let Some(payload) =
+                        header.header_response.dnd_release_payload::<ObjectPayload>()
+                    {
+                        actions.reparent = Some((payload.id, None));
                     }
                 });
-
-            // dropping on the scene header unparents
-            if let Some(payload) = header.header_response.dnd_release_payload::<ObjectPayload>() {
-                actions.reparent = Some((payload.id, None));
-            }
         });
 
     if let Some(id) = actions.select {
         scene.selected = Some(id);
+    }
+    if let Some((id, name)) = actions.rename {
+        let name = name.trim().to_string();
+        if !name.is_empty() {
+            if let Some(object) = scene.get_mut(id) {
+                object.name = name;
+            }
+        }
     }
     if let Some((id, parent)) = actions.reparent {
         scene.set_parent(id, parent);
@@ -57,28 +94,46 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene) {
     if let Some(id) = actions.delete {
         scene.remove(id);
     }
+    if let Some((kind, parent)) = actions.create {
+        let mut object = match kind {
+            CreateKind::Empty => GameObject::empty(),
+            CreateKind::Camera => GameObject::camera(),
+            CreateKind::Shape(shape) => GameObject::from_shape(shape),
+        };
+        object.parent = parent;
 
-    if let Some(id) = actions.attach_physics {
-    if let Some(object) = scene.get_mut(id) {
-        let half_size = object.size * 0.5;
-
-        object.physics = Some(PhysicsConfig {
-            body: PhysicsBody::Dynamic,
-            collider: ColliderShape::Box {
-                half_width: half_size,
-                half_height: half_size,
-            },
-        });
-    }
-}
-
-    if add_square {
-        let id = scene.add(GameObject::square());
+        let id = scene.add(object);
         scene.selected = Some(id);
     }
 }
 
-fn draw_node(ui: &mut egui::Ui, scene: &Scene, id: u64, actions: &mut Actions) {
+fn create_items(ui: &mut egui::Ui, parent: Option<u64>, actions: &mut Actions) {
+    if ui.button("Empty").clicked() {
+        actions.create = Some((CreateKind::Empty, parent));
+        ui.close_menu();
+    }
+    if ui.button("Camera").clicked() {
+        actions.create = Some((CreateKind::Camera, parent));
+        ui.close_menu();
+    }
+
+    ui.menu_button("2D Shape", |ui| {
+        for shape in Shape::ALL {
+            if ui.button(format!("{shape:?}")).clicked() {
+                actions.create = Some((CreateKind::Shape(shape), parent));
+                ui.close_menu();
+            }
+        }
+    });
+}
+
+fn draw_node(
+    ui: &mut egui::Ui,
+    scene: &Scene,
+    id: u64,
+    actions: &mut Actions,
+    state: &mut HierarchyState,
+) {
     let Some(object) = scene.get(id) else {
         return;
     };
@@ -87,27 +142,77 @@ fn draw_node(ui: &mut egui::Ui, scene: &Scene, id: u64, actions: &mut Actions) {
     if children.is_empty() {
         ui.horizontal(|ui| {
             ui.add_space(ui.spacing().indent);
-            row(ui, scene, object, actions);
+            row(ui, scene, object, actions, state);
         });
         return;
     }
 
     let state_id = ui.make_persistent_id(("hierarchy_node", id));
     egui::collapsing_header::CollapsingState::load_with_default_open(ui.ctx(), state_id, true)
-        .show_header(ui, |ui| row(ui, scene, object, actions))
+        .show_header(ui, |ui| row(ui, scene, object, actions, state))
         .body(|ui| {
             for child in children {
-                draw_node(ui, scene, child, actions);
+                draw_node(ui, scene, child, actions, state);
             }
         });
 }
 
-fn row(ui: &mut egui::Ui, scene: &Scene, object: &GameObject, actions: &mut Actions) {
+fn start_rename(state: &mut HierarchyState, object: &GameObject) {
+    state.renaming = Some(RenameState {
+        id: object.id,
+        buffer: object.name.clone(),
+        focused: false,
+    });
+}
+
+fn rename_field(
+    ui: &mut egui::Ui,
+    rect: egui::Rect,
+    id: u64,
+    actions: &mut Actions,
+    state: &mut HierarchyState,
+) {
+    let Some(rename) = state.renaming.as_mut() else {
+        return;
+    };
+
+    let edit = ui.put(
+        rect,
+        egui::TextEdit::singleline(&mut rename.buffer).desired_width(rect.width()),
+    );
+
+    if !rename.focused {
+        edit.request_focus();
+        rename.focused = true;
+        return;
+    }
+
+    if edit.lost_focus() {
+        let cancelled = ui.input(|i| i.key_pressed(egui::Key::Escape));
+        if !cancelled {
+            actions.rename = Some((id, rename.buffer.clone()));
+        }
+        state.renaming = None;
+    }
+}
+
+fn row(
+    ui: &mut egui::Ui,
+    scene: &Scene,
+    object: &GameObject,
+    actions: &mut Actions,
+    state: &mut HierarchyState,
+) {
     let selected = scene.selected == Some(object.id);
     let (rect, response) = ui.allocate_exact_size(
         egui::vec2(ui.available_width().max(60.0), 20.0),
         Sense::click_and_drag(),
     );
+
+    if state.renaming.as_ref().is_some_and(|r| r.id == object.id) {
+        rename_field(ui, rect, object.id, actions, state);
+        return;
+    }
 
     let drop_target = response
         .dnd_hover_payload::<ObjectPayload>()
@@ -127,16 +232,26 @@ fn row(ui: &mut egui::Ui, scene: &Scene, object: &GameObject, actions: &mut Acti
             .rect_filled(rect, 3.0, visuals.widgets.hovered.weak_bg_fill);
     }
 
+    let text_color = if object.visible {
+        ui.visuals().text_color()
+    } else {
+        ui.visuals().weak_text_color()
+    };
+
     ui.painter().text(
         egui::pos2(rect.min.x + 4.0, rect.center().y),
         Align2::LEFT_CENTER,
         &object.name,
         egui::TextStyle::Body.resolve(ui.style()),
-        ui.visuals().text_color(),
+        text_color,
     );
 
     if response.clicked() {
         actions.select = Some(object.id);
+    }
+    if response.double_clicked() {
+        actions.select = Some(object.id);
+        start_rename(state, object);
     }
 
     response.dnd_set_drag_payload(ObjectPayload { id: object.id });
@@ -148,16 +263,13 @@ fn row(ui: &mut egui::Ui, scene: &Scene, object: &GameObject, actions: &mut Acti
     }
 
     response.context_menu(|ui| {
-        ui.menu_button("Attach", |ui| {
-            if ui.button("PhysicalBody2D").clicked() {
-                actions.attach_physics = Some(object.id);
-                ui.close_menu();
-            }
+        if ui.button("Rename").clicked() {
+            start_rename(state, object);
+            ui.close_menu();
+        }
 
-            if ui.button("ColliderBox2D").clicked() {
-                actions.attach_collider = Some(object.id);
-                ui.close_menu();
-            }
+        ui.menu_button("Create Child", |ui| {
+            create_items(ui, Some(object.id), actions)
         });
 
         if object.parent.is_some() && ui.button("Unparent").clicked() {

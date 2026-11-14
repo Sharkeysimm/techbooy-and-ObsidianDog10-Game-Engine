@@ -3,11 +3,14 @@ mod content_browser;
 mod drag;
 mod editor;
 mod game_object;
+mod gizmo;
 mod hierarchy;
 mod inspector;
-mod scene;
-mod viewport;
+mod math;
 mod physics;
+mod scene;
+mod view;
+mod viewport;
 
 use editor::Editor;
 

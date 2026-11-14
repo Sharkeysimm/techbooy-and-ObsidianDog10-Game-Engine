@@ -1,104 +1,199 @@
-use std::collections::HashMap;
-
 use rapier2d::prelude::*;
 
-use crate::game_object::{
-    ColliderShape as GameColliderShape, GameObject, PhysicsBody, PhysicsConfig,
-};
+use crate::game_object::BodyType;
+use crate::scene::{Scene, WorldCollider, WorldShape};
+
+const GRAVITY: f32 = 980.0;
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Kind {
+    Static,
+    Dynamic,
+    Kinematic,
+}
+
+#[derive(Clone, PartialEq, Eq)]
+enum SpecShape {
+    Box(i32, i32),
+    Circle(i32),
+    Capsule(i32, i32),
+    Polygon(Vec<(i32, i32)>),
+}
+
+// quantised so float noise does not trigger rebuilds
+#[derive(Clone, PartialEq, Eq)]
+struct Spec {
+    id: u64,
+    kind: Kind,
+    shape: SpecShape,
+    gravity: i32,
+    lock_rotation: bool,
+    bounciness: i32,
+}
+
+struct Item {
+    spec: Spec,
+    collider: WorldCollider,
+    gravity_scale: f32,
+    bounciness: f32,
+}
 
 pub struct PhysicsSystem {
     world: PhysicsWorld,
-    body_handles: HashMap<u64, RigidBodyHandle>,
-    configs: HashMap<u64, Option<crate::game_object::PhysicsConfig>>,
+    dynamic: Vec<(u64, RigidBodyHandle)>,
+    specs: Vec<Spec>,
 }
 
 impl PhysicsSystem {
-pub fn teleport(&mut self, id: u64, x: f32, y: f32) {
-    let Some(handle) = self.body_handles.get(&id) else {
-        return;
-    };
-
-    if let Some(body) = self.world.bodies.get_mut(*handle) {
-        body.set_translation(Vector::new(x, y), true);
+    pub fn new() -> Self {
+        Self {
+            world: new_world(),
+            dynamic: Vec::new(),
+            specs: Vec::new(),
+        }
     }
-}
 
-    pub fn sync_objects(&mut self, objects: &[GameObject]) {
-        let current: HashMap<u64, Option<PhysicsConfig>> = objects
-            .iter()
-            .map(|object| (object.id, object.physics))
-            .collect();
+    pub fn reset(&mut self) {
+        self.world = new_world();
+        self.dynamic.clear();
+        self.specs.clear();
+    }
 
-        if current == self.configs {
+    pub fn step(&mut self, scene: &mut Scene) {
+        let items = collect(scene);
+        let specs: Vec<Spec> = items.iter().map(|i| i.spec.clone()).collect();
+
+        if specs != self.specs {
+            self.rebuild(&items);
+            self.specs = specs;
+        }
+
+        if items.is_empty() {
             return;
-        }
-
-        self.world = PhysicsWorld::new();
-        self.world.gravity = Vector::new(0.0, 290.0);
-        self.body_handles.clear();
-
-        for object in objects {
-            let Some(config) = object.physics else {
-                continue;
-            };
-
-            let body_builder = match config.body {
-                PhysicsBody::Dynamic => RigidBodyBuilder::dynamic().linear_damping(1.0),
-                PhysicsBody::Fixed => RigidBodyBuilder::fixed(),
-                PhysicsBody::Kinematic => RigidBodyBuilder::kinematic_position_based(),
-            }
-            .translation(Vector::new(object.x, object.y));
-
-            let collider_builder = match config.collider {
-                GameColliderShape::Box { half_width, half_height } => {
-                    ColliderBuilder::cuboid(half_width, half_height)
-                }
-                GameColliderShape::Circle { radius } => ColliderBuilder::ball(radius),
-            };
-
-            let (body_handle, _) = self.world.insert(body_builder, collider_builder);
-            self.body_handles.insert(object.id, body_handle);
-        }
-
-        self.configs = current;
-    }
-
-    pub fn step(&mut self, objects: &mut [GameObject]) {
-        // Game code controls kinematic positions, so push them into Rapier first.
-        for object in objects.iter() {
-            let Some(handle) = self.body_handles.get(&object.id) else {
-                continue;
-            };
-
-            if object
-                .physics
-                .is_some_and(|config| matches!(config.body, PhysicsBody::Kinematic))
-            {
-                if let Some(body) = self.world.bodies.get_mut(*handle) {
-                    body.set_next_kinematic_translation(Vector::new(object.x, object.y));
-                }
-            }
         }
 
         self.world.step();
 
-        // Rapier controls dynamic positions, so copy them back after stepping.
-        for object in objects.iter_mut() {
-            let Some(handle) = self.body_handles.get(&object.id) else {
+        for (id, handle) in &self.dynamic {
+            let Some(body) = self.world.bodies.get(*handle) else {
                 continue;
             };
 
-            if object
-                .physics
-                .is_some_and(|config| matches!(config.body, PhysicsBody::Dynamic))
-            {
-                if let Some(body) = self.world.bodies.get(*handle) {
-                    let position = body.translation();
-                    object.x = position.x;
-                    object.y = position.y;
+            let position = body.translation();
+            let angle = body.rotation().angle();
+            scene.set_world_pose(*id, eframe::egui::Vec2::new(position.x, position.y), angle);
+        }
+    }
+
+    fn rebuild(&mut self, items: &[Item]) {
+        self.world = new_world();
+        self.dynamic.clear();
+
+        for item in items {
+            let mut body = match item.spec.kind {
+                Kind::Static => RigidBodyBuilder::fixed(),
+                Kind::Dynamic => RigidBodyBuilder::dynamic().gravity_scale(item.gravity_scale),
+                Kind::Kinematic => RigidBodyBuilder::kinematic_position_based(),
+            };
+            if item.spec.lock_rotation {
+                body = body.lock_rotations();
+            }
+            let body = body
+                .translation(Vector::new(
+                    item.collider.position.x,
+                    item.collider.position.y,
+                ))
+                .rotation(item.collider.angle);
+
+            let collider = match &item.collider.shape {
+                WorldShape::Box { half_x, half_y } => ColliderBuilder::cuboid(*half_x, *half_y),
+                WorldShape::Circle { radius } => ColliderBuilder::ball(*radius),
+                WorldShape::Capsule {
+                    radius,
+                    half_segment,
+                } => ColliderBuilder::capsule_y(*half_segment, *radius),
+                WorldShape::Polygon { points } => {
+                    let hull: Vec<_> = points
+                        .iter()
+                        .map(|p| Vector::new(p.x, p.y).into())
+                        .collect();
+                    ColliderBuilder::convex_hull(&hull)
+                        .unwrap_or_else(|| ColliderBuilder::ball(1.0))
                 }
+            }
+            .restitution(item.bounciness);
+
+            let (handle, _) = self.world.insert(body, collider);
+
+            if item.spec.kind == Kind::Dynamic {
+                self.dynamic.push((item.spec.id, handle));
             }
         }
     }
 }
 
+fn new_world() -> PhysicsWorld {
+    let mut world = PhysicsWorld::new();
+    world.gravity = Vector::new(0.0, GRAVITY);
+    world
+}
+
+fn quantise(value: f32) -> i32 {
+    (value * 100.0).round() as i32
+}
+
+// a collider alone is static and a rigidbody needs a collider to simulate
+fn collect(scene: &Scene) -> Vec<Item> {
+    scene
+        .objects
+        .iter()
+        .filter(|o| scene.is_visible(o.id))
+        .filter_map(|object| {
+            let own = object.collider?;
+            let collider = scene.world_collider(object.id)?;
+
+            let (kind, gravity_scale, lock_rotation) = match object.rigidbody {
+                None => (Kind::Static, 0.0, false),
+                Some(rb) => {
+                    let kind = match rb.body {
+                        BodyType::Dynamic => Kind::Dynamic,
+                        BodyType::Kinematic => Kind::Kinematic,
+                        BodyType::Fixed => Kind::Static,
+                    };
+                    (kind, rb.gravity_scale, rb.lock_rotation)
+                }
+            };
+
+            let shape = match &collider.shape {
+                WorldShape::Box { half_x, half_y } => {
+                    SpecShape::Box(quantise(*half_x), quantise(*half_y))
+                }
+                WorldShape::Circle { radius } => SpecShape::Circle(quantise(*radius)),
+                WorldShape::Capsule {
+                    radius,
+                    half_segment,
+                } => SpecShape::Capsule(quantise(*radius), quantise(*half_segment)),
+                WorldShape::Polygon { points } => SpecShape::Polygon(
+                    points
+                        .iter()
+                        .map(|p| (quantise(p.x), quantise(p.y)))
+                        .collect(),
+                ),
+            };
+
+            Some(Item {
+                spec: Spec {
+                    id: object.id,
+                    kind,
+                    shape,
+                    gravity: quantise(gravity_scale),
+                    lock_rotation,
+                    bounciness: quantise(own.bounciness),
+                },
+                collider,
+                gravity_scale,
+                bounciness: own.bounciness,
+            })
+        })
+        .collect()
+}

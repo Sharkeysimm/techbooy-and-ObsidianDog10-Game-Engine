@@ -1,8 +1,20 @@
 use eframe::egui::Vec2;
 
-use crate::game_object::{
-    ColliderShape, GameObject, PhysicsBody, PhysicsConfig,
-};
+use crate::game_object::{Camera2D, ColliderShape, GameObject, Shape, Transform, BASE};
+use crate::math::{regular_polygon, Affine};
+
+pub enum WorldShape {
+    Box { half_x: f32, half_y: f32 },
+    Circle { radius: f32 },
+    Capsule { radius: f32, half_segment: f32 },
+    Polygon { points: Vec<Vec2> },
+}
+
+pub struct WorldCollider {
+    pub shape: WorldShape,
+    pub position: Vec2,
+    pub angle: f32,
+}
 
 pub struct Scene {
     pub objects: Vec<GameObject>,
@@ -17,7 +29,11 @@ impl Scene {
             selected: None,
             next_id: 1,
         };
-        let id = scene.add(GameObject::square());
+        let mut camera = GameObject::camera();
+        camera.name = "Main Camera".into();
+        scene.add(camera);
+
+        let id = scene.add(GameObject::from_shape(Shape::Square));
         scene.selected = Some(id);
         scene
     }
@@ -61,16 +77,95 @@ impl Scene {
         }
     }
 
-    pub fn world_position(&self, id: u64) -> Vec2 {
-        let mut position = Vec2::ZERO;
+    pub fn world_affine(&self, id: u64) -> Affine {
+        let mut chain = Vec::new();
         let mut current = self.get(id);
 
         while let Some(object) = current {
-            position += Vec2::new(object.x, object.y);
+            chain.push(object.transform);
             current = object.parent.and_then(|p| self.get(p));
         }
 
-        position
+        chain
+            .iter()
+            .rev()
+            .fold(Affine::IDENTITY, |acc, t| acc.mul(&local_affine(t)))
+    }
+
+    fn parent_affine(&self, id: u64) -> Affine {
+        self.get(id)
+            .and_then(|o| o.parent)
+            .map(|p| self.world_affine(p))
+            .unwrap_or(Affine::IDENTITY)
+    }
+
+    pub fn set_world_position(&mut self, id: u64, position: Vec2) {
+        let local = self.parent_affine(id).inverse().apply(position);
+
+        if let Some(object) = self.get_mut(id) {
+            object.transform.x = local.x;
+            object.transform.y = local.y;
+        }
+    }
+
+    pub fn set_world_pose(&mut self, id: u64, position: Vec2, angle: f32) {
+        let parent = self.parent_affine(id);
+        let local = parent.inverse().apply(position);
+        let rotation = -(angle - parent.angle()).to_degrees();
+
+        if let Some(object) = self.get_mut(id) {
+            object.transform.x = local.x;
+            object.transform.y = local.y;
+            object.transform.rotation = rotation;
+        }
+    }
+
+    pub fn world_collider(&self, id: u64) -> Option<WorldCollider> {
+        let object = self.get(id)?;
+        let collider = object.collider?;
+        let affine = self.world_affine(id);
+        let scale = affine.scale();
+
+        let shape = match collider.shape {
+            ColliderShape::Box { size_x, size_y } => WorldShape::Box {
+                half_x: (size_x * BASE * scale.x.abs() * 0.5).max(0.5),
+                half_y: (size_y * BASE * scale.y.abs() * 0.5).max(0.5),
+            },
+            ColliderShape::Circle { radius } => WorldShape::Circle {
+                radius: (radius * BASE * scale.x.abs().max(scale.y.abs())).max(0.5),
+            },
+            ColliderShape::Capsule { width, height } => {
+                let radius = (width * BASE * scale.x.abs() * 0.5).max(0.5);
+                let total = height * BASE * scale.y.abs();
+                WorldShape::Capsule {
+                    radius,
+                    half_segment: (total * 0.5 - radius).max(0.0),
+                }
+            }
+            ColliderShape::Polygon { sides, radius } => WorldShape::Polygon {
+                points: regular_polygon(sides, radius * BASE)
+                    .into_iter()
+                    .map(|p| Vec2::new(p.x * scale.x.abs(), p.y * scale.y.abs()))
+                    .collect(),
+            },
+        };
+
+        Some(WorldCollider {
+            shape,
+            position: affine.position(),
+            angle: affine.angle(),
+        })
+    }
+
+    // first active camera in hierarchy order
+    pub fn main_camera(&self) -> Option<(Camera2D, Vec2)> {
+        self.draw_order().into_iter().find_map(|id| {
+            let camera = self.get(id)?.camera?;
+            if !self.is_visible(id) {
+                return None;
+            }
+            Some((camera, self.world_affine(id).position()))
+        })
     }
 
     pub fn is_visible(&self, id: u64) -> bool {
@@ -99,7 +194,7 @@ impl Scene {
         false
     }
 
-    // keeps the world position so the object does not jump when reparented
+    // keeps the world transform so the object does not jump when reparented
     pub fn set_parent(&mut self, id: u64, parent: Option<u64>) {
         if let Some(parent) = parent {
             if self.is_same_or_descendant(parent, id) {
@@ -111,13 +206,21 @@ impl Scene {
             _ => return,
         }
 
-        let world = self.world_position(id);
-        let parent_world = parent.map(|p| self.world_position(p)).unwrap_or(Vec2::ZERO);
+        let world = self.world_affine(id);
+        let parent_affine = parent
+            .map(|p| self.world_affine(p))
+            .unwrap_or(Affine::IDENTITY);
+        let (position, rotation, scale) = parent_affine.inverse().mul(&world).decompose();
 
         if let Some(object) = self.get_mut(id) {
             object.parent = parent;
-            object.x = world.x - parent_world.x;
-            object.y = world.y - parent_world.y;
+            object.transform = Transform {
+                x: position.x,
+                y: position.y,
+                rotation,
+                scale_x: scale.x,
+                scale_y: scale.y,
+            };
         }
     }
 
@@ -137,4 +240,8 @@ impl Scene {
             self.selected = None;
         }
     }
+}
+
+fn local_affine(t: &Transform) -> Affine {
+    Affine::from_trs(Vec2::new(t.x, t.y), t.rotation, Vec2::new(t.scale_x, t.scale_y))
 }
