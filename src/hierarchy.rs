@@ -1,7 +1,7 @@
 use eframe::egui::{self, Align, Align2, Layout, Sense};
 
 use crate::drag::ObjectPayload;
-use crate::game_object::GameObject;
+use crate::game_object::{ColliderShape, GameObject, PhysicsBody, PhysicsConfig};
 use crate::scene::Scene;
 
 #[derive(Default)]
@@ -9,6 +9,8 @@ struct Actions {
     select: Option<u64>,
     reparent: Option<(u64, Option<u64>)>,
     delete: Option<u64>,
+    attach_physics: Option<u64>,
+    attach_collider: Option<u64>,
 }
 
 pub fn show(ctx: &egui::Context, scene: &mut Scene) {
@@ -55,6 +57,21 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene) {
     if let Some(id) = actions.delete {
         scene.remove(id);
     }
+
+    if let Some(id) = actions.attach_physics {
+    if let Some(object) = scene.get_mut(id) {
+        let half_size = object.size * 0.5;
+
+        object.physics = Some(PhysicsConfig {
+            body: PhysicsBody::Dynamic,
+            collider: ColliderShape::Box {
+                half_width: half_size,
+                half_height: half_size,
+            },
+        });
+    }
+}
+
     if add_square {
         let id = scene.add(GameObject::square());
         scene.selected = Some(id);
@@ -131,6 +148,18 @@ fn row(ui: &mut egui::Ui, scene: &Scene, object: &GameObject, actions: &mut Acti
     }
 
     response.context_menu(|ui| {
+        ui.menu_button("Attach", |ui| {
+            if ui.button("PhysicalBody2D").clicked() {
+                actions.attach_physics = Some(object.id);
+                ui.close_menu();
+            }
+
+            if ui.button("ColliderBox2D").clicked() {
+                actions.attach_collider = Some(object.id);
+                ui.close_menu();
+            }
+        });
+
         if object.parent.is_some() && ui.button("Unparent").clicked() {
             actions.reparent = Some((object.id, None));
             ui.close_menu();

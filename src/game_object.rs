@@ -1,3 +1,22 @@
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum PhysicsBody {
+    Dynamic,
+    Fixed,
+    Kinematic,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum ColliderShape {
+    Box { half_width: f32, half_height: f32 },
+    Circle { radius: f32 },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PhysicsConfig {
+    pub body: PhysicsBody,
+    pub collider: ColliderShape,
+}
+
 pub struct GameObject {
     pub id: u64,
     pub name: String,
@@ -7,6 +26,7 @@ pub struct GameObject {
     pub visible: bool,
     pub parent: Option<u64>,
     pub texture: Option<String>,
+    pub physics: Option<PhysicsConfig>,
 }
 
 impl GameObject {
@@ -20,6 +40,7 @@ impl GameObject {
             visible: true,
             parent: None,
             texture: None,
+            physics: None,
         }
     }
 

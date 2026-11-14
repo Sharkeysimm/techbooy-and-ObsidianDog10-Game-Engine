@@ -44,7 +44,7 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene) {
                 ];
                 painter.add(egui::Shape::closed_line(
                     outline,
-                    Stroke::new(1.5, Color32::from_rgb(255, 200, 60)),
+                    Stroke::new(1.5_f32, Color32::from_rgb(255, 200, 60)),
                 ));
             }
         }

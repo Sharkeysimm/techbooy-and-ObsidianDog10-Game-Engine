@@ -7,6 +7,7 @@ mod hierarchy;
 mod inspector;
 mod scene;
 mod viewport;
+mod physics;
 
 use editor::Editor;
 

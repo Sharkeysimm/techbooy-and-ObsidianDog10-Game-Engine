@@ -1,6 +1,8 @@
 use eframe::egui::Vec2;
 
-use crate::game_object::GameObject;
+use crate::game_object::{
+    ColliderShape, GameObject, PhysicsBody, PhysicsConfig,
+};
 
 pub struct Scene {
     pub objects: Vec<GameObject>,
