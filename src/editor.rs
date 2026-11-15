@@ -8,6 +8,7 @@ use crate::gizmo::Tool;
 use crate::hierarchy::HierarchyState;
 use crate::physics::PhysicsSystem;
 use crate::scene::Scene;
+use crate::storage;
 use crate::script::ScriptRuntime;
 use crate::viewport::ViewportState;
 use crate::{drag, hierarchy, inspector, viewport};
@@ -96,7 +97,44 @@ impl Editor {
         }
     }
 
+    // saving needs the scene and the folder the content browser is showing
+    fn handle_saves(&mut self) {
+        if let Some(id) = self.browser.take_prefab_request() {
+            let result = storage::save_prefab(&self.scene, id, self.browser.current_dir());
+            self.report_save(result);
+        }
+
+        if self.viewport.take_script_save() {
+            let saved = self
+                .scene
+                .selected
+                .and_then(|id| self.scene.get(id))
+                .and_then(|object| {
+                    object.script.as_ref().map(|graph| {
+                        storage::save_script(graph, &object.name, self.browser.current_dir())
+                    })
+                });
+
+            if let Some(result) = saved {
+                self.report_save(result);
+            }
+        }
+    }
+
+    fn report_save(&mut self, result: std::io::Result<std::path::PathBuf>) {
+        match result {
+            Ok(path) => self.scene.log(format!("saved {}", path.display())),
+            Err(error) => self.scene.log(format!("could not save: {error}")),
+        }
+        self.browser.refresh();
+    }
+
     pub fn ui(&mut self, ctx: &egui::Context) {
+        if ctx.input(|i| i.key_pressed(Key::F11)) {
+            let fullscreen = ctx.input(|i| i.viewport().fullscreen.unwrap_or(false));
+            ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(!fullscreen));
+        }
+
         self.shortcuts(ctx);
 
         egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
@@ -134,6 +172,12 @@ impl Editor {
         });
 
         self.browser.show(ctx);
+        if let Some(path) = self.browser.take_script_open_request() {
+            match storage::load_script(&path) {
+                Some(graph) => self.viewport.open_script_asset(path, graph),
+                None => self.scene.log(format!("could not open {}", path.display())),
+            }
+        }
         hierarchy::show(ctx, &mut self.scene, &mut self.hierarchy);
         inspector::show(ctx, &mut self.scene, &mut self.viewport.mode);
 
@@ -164,6 +208,7 @@ impl Editor {
         }
 
         viewport::show(ctx, &mut self.scene, &mut self.viewport, self.is_playing);
+        self.handle_saves();
         drag::paint_ghost(ctx, &self.scene);
         ctx.request_repaint();
     }

@@ -1,6 +1,6 @@
 use eframe::egui::{self, Align, Align2, Color32, FontId, Layout, Sense};
 
-use crate::assets::{image_uri, is_image};
+use crate::assets::{image_uri, is_image, is_vscript};
 use crate::drag::AssetPayload;
 use crate::game_object::{
     BodyType, Camera2D, Collider2D, ColliderShape, GameObject, Rigidbody2D, Shape, ShapeRenderer,
@@ -8,6 +8,7 @@ use crate::game_object::{
 };
 use crate::scene::Scene;
 use crate::script::ScriptGraph;
+use crate::storage;
 use crate::viewport::ViewMode;
 
 const COLLIDER_NAMES: [&str; 4] = ["Box", "Circle", "Capsule", "Polygon"];
@@ -132,8 +133,25 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
 
     if let Some(sprite) = object.sprite_renderer.as_mut() {
         remove_sprite = component(ui, ("sprite", id), "Sprite Renderer", true, |ui| {
-            let name = sprite.texture.rsplit('/').next().unwrap_or(&sprite.texture);
-            ui.label(format!("Texture: {name}"));
+            let shown = if sprite.texture.is_empty() {
+                "none".to_string()
+            } else {
+                sprite
+                    .texture
+                    .rsplit('/')
+                    .next()
+                    .unwrap_or(&sprite.texture)
+                    .to_string()
+            };
+
+            egui::ComboBox::from_label("Texture")
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    for path in storage::list_images() {
+                        let label = path.rsplit('/').next().unwrap_or(&path).to_string();
+                        ui.selectable_value(&mut sprite.texture, format!("file://{path}"), label);
+                    }
+                });
 
             egui::ComboBox::from_label("Filter")
                 .selected_text(format!("{:?}", sprite.filter))
@@ -162,7 +180,12 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
                 ui.label("Gravity scale");
                 ui.add(egui::DragValue::new(&mut body.gravity_scale).speed(0.05));
             });
-            ui.checkbox(&mut body.lock_rotation, "Lock rotation");
+            ui.horizontal(|ui| {
+                ui.label("Freeze position");
+                ui.checkbox(&mut body.freeze_x, "X");
+                ui.checkbox(&mut body.freeze_y, "Y");
+            });
+            ui.checkbox(&mut body.lock_rotation, "Freeze rotation");
 
             if !has_collider {
                 ui.colored_label(Color32::YELLOW, "needs a collider to collide");
@@ -225,6 +248,7 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
                 }
             }
 
+            ui.checkbox(&mut collider.is_trigger, "Is trigger");
             ui.add(egui::Slider::new(&mut collider.bounciness, 0.0..=1.0).text("Bounciness"));
         });
     }
@@ -275,6 +299,23 @@ fn add_component_menu(ui: &mut egui::Ui, object: &mut GameObject) {
                     shape: Shape::Square,
                     color: Color32::WHITE,
                 });
+                ui.close_menu();
+            }
+
+            if ui
+                .add_enabled(
+                    object.sprite_renderer.is_none(),
+                    egui::Button::new("Sprite Renderer"),
+                )
+                .clicked()
+            {
+                // a sprite replaces the shape so only one visual is drawn
+                object.sprite_renderer = Some(SpriteRenderer {
+                    texture: String::new(),
+                    filter: TextureFilter::Nearest,
+                    tint: Color32::WHITE,
+                });
+                object.shape_renderer = None;
                 ui.close_menu();
             }
 
@@ -332,7 +373,7 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
 
     let hovering = response
         .dnd_hover_payload::<AssetPayload>()
-        .is_some_and(|p| is_image(&p.path));
+        .is_some_and(|p| is_image(&p.path) || is_vscript(&p.path));
     let fill = if hovering {
         Color32::from_rgba_unmultiplied(70, 130, 220, 70)
     } else {
@@ -343,7 +384,7 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
     ui.painter().text(
         rect.center(),
         Align2::CENTER_CENTER,
-        "Drop an image here to set the sprite",
+        "Drop an image or script here",
         FontId::proportional(12.0),
         ui.visuals().weak_text_color(),
     );
@@ -356,6 +397,10 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
                 tint: Color32::WHITE,
             });
             object.shape_renderer = None;
+        } else if is_vscript(&payload.path) {
+            if let Some(graph) = storage::load_script(&payload.path) {
+                object.script = Some(graph);
+            }
         }
     }
 }

@@ -21,6 +21,7 @@ pub struct Scene {
     pub selected: Option<u64>,
     pub log: Vec<String>,
     pub kicks: Vec<(u64, Vec2)>,
+    pub velocity_sets: Vec<(u64, Option<f32>, Option<f32>)>,
     next_id: u64,
 }
 
@@ -31,6 +32,7 @@ impl Scene {
             selected: None,
             log: Vec::new(),
             kicks: Vec::new(),
+            velocity_sets: Vec::new(),
             next_id: 1,
         };
         let mut camera = GameObject::camera();

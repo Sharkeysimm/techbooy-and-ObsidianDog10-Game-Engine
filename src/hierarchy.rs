@@ -1,8 +1,12 @@
 use eframe::egui::{self, Align, Align2, Layout, Sense};
 
-use crate::drag::ObjectPayload;
+use std::path::PathBuf;
+
+use crate::assets::{is_prefab, is_vscript};
+use crate::drag::{AssetPayload, ObjectPayload};
 use crate::game_object::{GameObject, Shape};
 use crate::scene::Scene;
+use crate::storage;
 
 #[derive(Clone, Copy)]
 enum CreateKind {
@@ -29,6 +33,8 @@ struct Actions {
     delete: Option<u64>,
     create: Option<(CreateKind, Option<u64>)>,
     rename: Option<(u64, String)>,
+    instantiate: Option<(PathBuf, Option<u64>)>,
+    attach_script: Option<(PathBuf, u64)>,
 }
 
 pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut HierarchyState) {
@@ -74,6 +80,13 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut HierarchyState) 
                     {
                         actions.reparent = Some((payload.id, None));
                     }
+                    if let Some(payload) =
+                        header.header_response.dnd_release_payload::<AssetPayload>()
+                    {
+                        if is_prefab(&payload.path) {
+                            actions.instantiate = Some((payload.path.clone(), None));
+                        }
+                    }
                 });
         });
 
@@ -93,6 +106,19 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut HierarchyState) 
     }
     if let Some(id) = actions.delete {
         scene.remove(id);
+    }
+    if let Some((path, id)) = actions.attach_script {
+        if let Some(graph) = storage::load_script(&path) {
+            if let Some(object) = scene.get_mut(id) {
+                object.script = Some(graph);
+            }
+            scene.selected = Some(id);
+        }
+    }
+    if let Some((path, parent)) = actions.instantiate {
+        if let Some(prefab) = storage::load_prefab(&path) {
+            scene.selected = storage::instantiate(scene, &prefab, parent, None);
+        }
     }
     if let Some((kind, parent)) = actions.create {
         let mut object = match kind {
@@ -216,7 +242,10 @@ fn row(
 
     let drop_target = response
         .dnd_hover_payload::<ObjectPayload>()
-        .is_some_and(|p| p.id != object.id);
+        .is_some_and(|p| p.id != object.id)
+        || response
+            .dnd_hover_payload::<AssetPayload>()
+            .is_some_and(|p| is_prefab(&p.path) || is_vscript(&p.path));
 
     let visuals = ui.visuals();
     if drop_target {
@@ -259,6 +288,13 @@ fn row(
     if let Some(payload) = response.dnd_release_payload::<ObjectPayload>() {
         if payload.id != object.id {
             actions.reparent = Some((payload.id, Some(object.id)));
+        }
+    }
+    if let Some(payload) = response.dnd_release_payload::<AssetPayload>() {
+        if is_prefab(&payload.path) {
+            actions.instantiate = Some((payload.path.clone(), Some(object.id)));
+        } else if is_vscript(&payload.path) {
+            actions.attach_script = Some((payload.path.clone(), object.id));
         }
     }
 

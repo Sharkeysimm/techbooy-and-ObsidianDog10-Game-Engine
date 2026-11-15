@@ -3,9 +3,14 @@ use eframe::egui::{
     Shape, Stroke, UiBuilder, Vec2,
 };
 use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
 
+use crate::assets::is_vscript;
+use crate::drag::AssetPayload;
 use crate::scene::Scene;
 use crate::script::{Category, Compare, Node, NodeKind, Property, ScriptGraph};
+use crate::storage;
 
 const NODE_W: f32 = 210.0;
 const PORT_R: f32 = 6.0;
@@ -20,6 +25,12 @@ struct LinkDrag {
 struct KeyCapture {
     active: Option<Id>,
     seen: bool,
+}
+
+struct AssetScript {
+    path: PathBuf,
+    graph: ScriptGraph,
+    original: String,
 }
 
 struct Picker {
@@ -42,9 +53,32 @@ pub struct ScriptEditor {
     link: Option<LinkDrag>,
     picker: Option<Picker>,
     capture: KeyCapture,
+    save_requested: bool,
+    asset: Option<AssetScript>,
 }
 
 impl ScriptEditor {
+    // switching scripts saves the one that was open
+    pub fn open_asset(&mut self, path: PathBuf, graph: ScriptGraph) {
+        if let Some(mut old) = self.asset.take() {
+            write_if_changed(&mut old);
+        }
+
+        let original = serde_json::to_string(&graph).unwrap_or_default();
+        self.asset = Some(AssetScript {
+            path,
+            graph,
+            original,
+        });
+        self.pan = Vec2::ZERO;
+        self.link = None;
+        self.picker = None;
+    }
+
+    pub fn take_save_request(&mut self) -> bool {
+        std::mem::take(&mut self.save_requested)
+    }
+
     pub fn capturing(&self) -> bool {
         self.capture.active.is_some()
     }
@@ -68,7 +102,15 @@ struct Actions {
     connect: Option<(u32, usize, u32)>,
 }
 
+const HINT: &str = "Events start a chain. Drag from a dot to another node to connect. \
+     Right-click empty space to add nodes, a dot to unplug, a title to delete.";
+
 pub fn show(ui: &mut egui::Ui, scene: &mut Scene, state: &mut ScriptEditor) {
+    if state.asset.is_some() {
+        show_asset(ui, scene, state);
+        return;
+    }
+
     let Some(id) = scene.selected else {
         ui.label("Select an object to edit its script");
         return;
@@ -95,14 +137,65 @@ pub fn show(ui: &mut egui::Ui, scene: &mut Scene, state: &mut ScriptEditor) {
                 add_menu(ui, graph, vec2(40.0, 40.0) - state.pan);
             }
         });
+        if ui.button("Save to Content").clicked() {
+            state.save_requested = true;
+        }
     });
-    ui.label(
-        "Events start a chain. Drag from a dot to another node to connect. \
-         Right-click empty space to add nodes, a dot to unplug, a title to delete.",
-    );
+    ui.label(HINT);
     ui.separator();
 
+    console(ui, scene);
+
+    egui::CentralPanel::default().show_inside(ui, |ui| {
+        if let Some(graph) = scene.get_mut(id).and_then(|o| o.script.as_mut()) {
+            canvas(ui, graph, state, id);
+        }
+    });
+}
+
+// editing a script file from the content browser instead of an object
+fn show_asset(ui: &mut egui::Ui, scene: &mut Scene, state: &mut ScriptEditor) {
+    let Some(mut asset) = state.asset.take() else {
+        return;
+    };
+    let name = asset
+        .path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let mut close = false;
+
+    ui.horizontal(|ui| {
+        ui.heading(format!("Script asset: {name}"));
+        ui.menu_button("Add Node", |ui| {
+            add_menu(ui, &mut asset.graph, vec2(40.0, 40.0) - state.pan);
+        });
+        if ui.button("Close").clicked() {
+            close = true;
+        }
+    });
+    ui.label("Changes save automatically. Drag this script from the content browser onto an object to use it.");
+    ui.label(HINT);
+    ui.separator();
+
+    console(ui, scene);
+
+    egui::CentralPanel::default().show_inside(ui, |ui| {
+        canvas(ui, &mut asset.graph, state, u64::MAX);
+    });
+
+    // waiting for the pointer to be released avoids writing on every frame of a drag
+    if close || !ui.input(|i| i.pointer.any_down()) {
+        write_if_changed(&mut asset);
+    }
+    if !close {
+        state.asset = Some(asset);
+    }
+}
+
+fn console(ui: &mut egui::Ui, scene: &mut Scene) {
     let mut clear_log = false;
+
     egui::TopBottomPanel::bottom("script_console")
         .resizable(true)
         .default_height(90.0)
@@ -122,15 +215,28 @@ pub fn show(ui: &mut egui::Ui, scene: &mut Scene, state: &mut ScriptEditor) {
                     }
                 });
         });
+
     if clear_log {
         scene.log.clear();
     }
+}
 
-    egui::CentralPanel::default().show_inside(ui, |ui| {
-        if let Some(graph) = scene.get_mut(id).and_then(|o| o.script.as_mut()) {
-            canvas(ui, graph, state, id);
+fn write_if_changed(asset: &mut AssetScript) {
+    if !asset.path.exists() {
+        return;
+    }
+    let Ok(current) = serde_json::to_string(&asset.graph) else {
+        return;
+    };
+    if current == asset.original {
+        return;
+    }
+
+    if let Ok(pretty) = serde_json::to_string_pretty(&asset.graph) {
+        if fs::write(&asset.path, pretty).is_ok() {
+            asset.original = current;
         }
-    });
+    }
 }
 
 fn canvas(ui: &mut egui::Ui, graph: &mut ScriptGraph, state: &mut ScriptEditor, object_id: u64) {
@@ -252,6 +358,20 @@ fn canvas(ui: &mut egui::Ui, graph: &mut ScriptGraph, state: &mut ScriptEditor, 
                 if let Some((from, port)) = from {
                     graph.connect(from, port, id);
                 }
+            }
+        }
+    }
+
+    let hovering_script = response
+        .dnd_hover_payload::<AssetPayload>()
+        .is_some_and(|p| is_vscript(&p.path));
+    if hovering_script {
+        painter.rect_filled(rect, 0.0, Color32::from_rgba_unmultiplied(70, 130, 220, 30));
+    }
+    if let Some(payload) = response.dnd_release_payload::<AssetPayload>() {
+        if is_vscript(&payload.path) {
+            if let Some(loaded) = storage::load_script(&payload.path) {
+                *graph = loaded;
             }
         }
     }
@@ -410,7 +530,10 @@ fn category_color(kind: &NodeKind) -> Color32 {
 
 fn params(ui: &mut egui::Ui, salt: Id, kind: &mut NodeKind, capture: &mut KeyCapture) {
     match kind {
-        NodeKind::WhileKey { key } | NodeKind::OnKeyPressed { key } | NodeKind::IfKey { key } => {
+        NodeKind::WhileKey { key }
+        | NodeKind::OnKeyPressed { key }
+        | NodeKind::OnKeyReleased { key }
+        | NodeKind::IfKey { key } => {
             key_button(ui, salt, key, capture);
         }
         NodeKind::Move { x, y } => {
@@ -464,7 +587,44 @@ fn params(ui: &mut egui::Ui, salt: Id, kind: &mut NodeKind, capture: &mut KeyCap
                 ui.add(egui::DragValue::new(value).speed(1.0));
             });
         }
-        NodeKind::OnStart | NodeKind::EveryFrame | NodeKind::Destroy => {}
+        NodeKind::OnCollide { with }
+        | NodeKind::WhileColliding { with }
+        | NodeKind::OnStopColliding { with } => {
+            ui.label("Other object name");
+            ui.add(
+                egui::TextEdit::singleline(with)
+                    .hint_text("any object")
+                    .desired_width(NODE_W - 30.0),
+            );
+        }
+        NodeKind::SetVelocityX { value } | NodeKind::SetVelocityY { value } => {
+            ui.horizontal(|ui| {
+                ui.label("Speed");
+                ui.add(egui::DragValue::new(value).speed(1.0));
+            });
+        }
+        NodeKind::SpawnPrefab { prefab } => {
+            let shown = Path::new(prefab.as_str())
+                .file_stem()
+                .map(|s| s.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "pick a prefab".to_string());
+
+            egui::ComboBox::from_id_salt(salt.with("prefab"))
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    for path in storage::list_prefabs() {
+                        let label = Path::new(&path)
+                            .file_stem()
+                            .map(|s| s.to_string_lossy().into_owned())
+                            .unwrap_or_else(|| path.clone());
+                        ui.selectable_value(prefab, path.clone(), label);
+                    }
+                });
+        }
+        NodeKind::OnStart
+        | NodeKind::EveryFrame
+        | NodeKind::Destroy
+        | NodeKind::DestroyOther => {}
     }
 }
 

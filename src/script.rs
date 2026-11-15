@@ -1,9 +1,13 @@
 use eframe::egui::{Key, Vec2};
+use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
+use std::path::Path;
 
+use crate::collision;
 use crate::scene::Scene;
+use crate::storage;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Property {
     PosX,
     PosY,
@@ -22,7 +26,7 @@ impl Property {
     ];
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Compare {
     Less,
     Greater,
@@ -39,22 +43,42 @@ pub enum Category {
     Flow,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub enum NodeKind {
     OnStart,
     EveryFrame,
-    WhileKey { key: Key },
-    OnKeyPressed { key: Key },
+    WhileKey {
+        #[serde(with = "crate::serde_util::key")]
+        key: Key,
+    },
+    OnKeyPressed {
+        #[serde(with = "crate::serde_util::key")]
+        key: Key,
+    },
+    OnKeyReleased {
+        #[serde(with = "crate::serde_util::key")]
+        key: Key,
+    },
+    OnCollide { with: String },
+    WhileColliding { with: String },
+    OnStopColliding { with: String },
     Move { x: f32, y: f32 },
     Rotate { degrees: f32 },
     SetPosition { x: f32, y: f32 },
     SetScale { x: f32, y: f32 },
     SetVisible { visible: bool },
     AddVelocity { x: f32, y: f32 },
+    SetVelocityX { value: f32 },
+    SetVelocityY { value: f32 },
     Print { text: String },
     Wait { seconds: f32 },
+    SpawnPrefab { prefab: String },
+    DestroyOther,
     Destroy,
-    IfKey { key: Key },
+    IfKey {
+        #[serde(with = "crate::serde_util::key")]
+        key: Key,
+    },
     IfCompare {
         property: Property,
         compare: Compare,
@@ -69,14 +93,22 @@ impl NodeKind {
             NodeKind::EveryFrame => "Every Frame",
             NodeKind::WhileKey { .. } => "While Key Held",
             NodeKind::OnKeyPressed { .. } => "On Key Pressed",
+            NodeKind::OnKeyReleased { .. } => "On Key Released",
+            NodeKind::OnCollide { .. } => "On Collide",
+            NodeKind::WhileColliding { .. } => "While Colliding",
+            NodeKind::OnStopColliding { .. } => "On Stop Colliding",
             NodeKind::Move { .. } => "Move",
             NodeKind::Rotate { .. } => "Rotate",
             NodeKind::SetPosition { .. } => "Set Position",
             NodeKind::SetScale { .. } => "Set Scale",
             NodeKind::SetVisible { .. } => "Set Visible",
             NodeKind::AddVelocity { .. } => "Add Velocity",
+            NodeKind::SetVelocityX { .. } => "Set Velocity X",
+            NodeKind::SetVelocityY { .. } => "Set Velocity Y",
             NodeKind::Print { .. } => "Print",
             NodeKind::Wait { .. } => "Wait",
+            NodeKind::SpawnPrefab { .. } => "Spawn Prefab",
+            NodeKind::DestroyOther => "Destroy Other",
             NodeKind::Destroy => "Destroy Self",
             NodeKind::IfKey { .. } => "If Key Held",
             NodeKind::IfCompare { .. } => "If Compare",
@@ -88,7 +120,11 @@ impl NodeKind {
             NodeKind::OnStart
             | NodeKind::EveryFrame
             | NodeKind::WhileKey { .. }
-            | NodeKind::OnKeyPressed { .. } => Category::Event,
+            | NodeKind::OnKeyPressed { .. }
+            | NodeKind::OnKeyReleased { .. }
+            | NodeKind::OnCollide { .. }
+            | NodeKind::WhileColliding { .. }
+            | NodeKind::OnStopColliding { .. } => Category::Event,
             NodeKind::IfKey { .. } | NodeKind::IfCompare { .. } => Category::Flow,
             _ => Category::Action,
         }
@@ -116,6 +152,16 @@ impl NodeKind {
                     NodeKind::EveryFrame,
                     NodeKind::WhileKey { key: Key::Space },
                     NodeKind::OnKeyPressed { key: Key::Space },
+                    NodeKind::OnKeyReleased { key: Key::Space },
+                    NodeKind::OnCollide {
+                        with: String::new(),
+                    },
+                    NodeKind::WhileColliding {
+                        with: String::new(),
+                    },
+                    NodeKind::OnStopColliding {
+                        with: String::new(),
+                    },
                 ],
             ),
             (
@@ -127,10 +173,16 @@ impl NodeKind {
                     NodeKind::SetScale { x: 1.0, y: 1.0 },
                     NodeKind::SetVisible { visible: true },
                     NodeKind::AddVelocity { x: 0.0, y: -400.0 },
+                    NodeKind::SetVelocityX { value: 200.0 },
+                    NodeKind::SetVelocityY { value: 0.0 },
                     NodeKind::Print {
                         text: "Hello".into(),
                     },
                     NodeKind::Wait { seconds: 1.0 },
+                    NodeKind::SpawnPrefab {
+                        prefab: String::new(),
+                    },
+                    NodeKind::DestroyOther,
                     NodeKind::Destroy,
                 ],
             ),
@@ -149,21 +201,22 @@ impl NodeKind {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Node {
     pub id: u32,
     pub kind: NodeKind,
+    #[serde(with = "crate::serde_util::vec2")]
     pub pos: Vec2,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Link {
     pub from: u32,
     pub port: usize,
     pub to: u32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ScriptGraph {
     pub nodes: Vec<Node>,
     pub links: Vec<Link>,
@@ -261,17 +314,28 @@ impl ScriptGraph {
 struct Input {
     held: HashSet<Key>,
     pressed: HashSet<Key>,
+    released: HashSet<Key>,
+}
+
+// pairs are (this object, other object) and both directions are listed
+#[derive(Default)]
+struct Collisions {
+    enter: Vec<(u64, u64)>,
+    stay: Vec<(u64, u64)>,
+    exit: Vec<(u64, u64)>,
 }
 
 struct Pending {
     object: u64,
     node: u32,
+    other: Option<u64>,
     remaining: f32,
 }
 
 pub struct ScriptRuntime {
     started: HashSet<u64>,
     previous: HashSet<Key>,
+    touching: HashSet<(u64, u64)>,
     pending: Vec<Pending>,
 }
 
@@ -282,6 +346,7 @@ impl ScriptRuntime {
         Self {
             started: HashSet::new(),
             previous: HashSet::new(),
+            touching: HashSet::new(),
             pending: Vec::new(),
         }
     }
@@ -289,13 +354,39 @@ impl ScriptRuntime {
     pub fn reset(&mut self) {
         self.started.clear();
         self.previous.clear();
+        self.touching.clear();
         self.pending.clear();
     }
 
     pub fn update(&mut self, scene: &mut Scene, held: HashSet<Key>, dt: f32) {
         let pressed: HashSet<Key> = held.difference(&self.previous).copied().collect();
+        let released: HashSet<Key> = self.previous.difference(&held).copied().collect();
         self.previous = held.clone();
-        let input = Input { held, pressed };
+        let input = Input {
+            held,
+            pressed,
+            released,
+        };
+
+        let now = collision::touching_pairs(scene);
+        let mut collisions = Collisions::default();
+
+        for &(a, b) in &now {
+            let is_new = !self.touching.contains(&(a, b));
+            for pair in [(a, b), (b, a)] {
+                collisions.stay.push(pair);
+                if is_new {
+                    collisions.enter.push(pair);
+                }
+            }
+        }
+        for &(a, b) in &self.touching {
+            if !now.contains(&(a, b)) {
+                collisions.exit.push((a, b));
+                collisions.exit.push((b, a));
+            }
+        }
+        self.touching = now;
 
         let ids: Vec<u64> = scene
             .objects
@@ -305,52 +396,78 @@ impl ScriptRuntime {
             .collect();
 
         for id in ids {
-            self.run_object(scene, &input, id, dt);
+            self.run_object(scene, &input, &collisions, id, dt);
         }
 
         // waits belonging to destroyed objects are dropped
         self.pending.retain(|p| scene.get(p.object).is_some());
     }
 
-    fn run_object(&mut self, scene: &mut Scene, input: &Input, id: u64, dt: f32) {
+    fn run_object(
+        &mut self,
+        scene: &mut Scene,
+        input: &Input,
+        collisions: &Collisions,
+        id: u64,
+        dt: f32,
+    ) {
         // graph is taken out while it runs so the scene can be changed freely
         let Some(graph) = scene.get_mut(id).and_then(|o| o.script.take()) else {
             return;
         };
         let mut alive = true;
 
-        let mut due = Vec::new();
+        let mut due: Vec<(u32, Option<u64>)> = Vec::new();
         self.pending.retain_mut(|p| {
             if p.object != id {
                 return true;
             }
             p.remaining -= dt;
             if p.remaining <= 0.0 {
-                due.push(p.node);
+                due.push((p.node, p.other));
                 false
             } else {
                 true
             }
         });
-        for node in due {
-            if alive {
-                alive = self.run_chain(scene, input, &graph, id, Some(node), dt);
+        for (node, other) in due {
+            if !alive {
+                break;
             }
+            let other = other.filter(|o| scene.get(*o).is_some());
+            alive = self.run_chain(scene, input, &graph, id, Some(node), other, dt);
         }
 
         let first_frame = self.started.insert(id);
         for node in &graph.nodes {
-            let fire = match &node.kind {
-                NodeKind::OnStart => first_frame,
-                NodeKind::EveryFrame => true,
-                NodeKind::WhileKey { key } => input.held.contains(key),
-                NodeKind::OnKeyPressed { key } => input.pressed.contains(key),
-                _ => false,
+            if !alive {
+                break;
+            }
+
+            let triggers: Vec<Option<u64>> = match &node.kind {
+                NodeKind::OnStart => {
+                    if first_frame {
+                        vec![None]
+                    } else {
+                        Vec::new()
+                    }
+                }
+                NodeKind::EveryFrame => vec![None],
+                NodeKind::WhileKey { key } => flag(input.held.contains(key)),
+                NodeKind::OnKeyPressed { key } => flag(input.pressed.contains(key)),
+                NodeKind::OnKeyReleased { key } => flag(input.released.contains(key)),
+                NodeKind::OnCollide { with } => others(scene, &collisions.enter, id, with),
+                NodeKind::WhileColliding { with } => others(scene, &collisions.stay, id, with),
+                NodeKind::OnStopColliding { with } => others(scene, &collisions.exit, id, with),
+                _ => Vec::new(),
             };
 
-            if fire && alive {
-                let first = graph.target(node.id, 0);
-                alive = self.run_chain(scene, input, &graph, id, first, dt);
+            let first = graph.target(node.id, 0);
+            for other in triggers {
+                if !alive {
+                    break;
+                }
+                alive = self.run_chain(scene, input, &graph, id, first, other, dt);
             }
         }
 
@@ -362,6 +479,7 @@ impl ScriptRuntime {
     }
 
     // returns false when the object destroyed itself
+    #[allow(clippy::too_many_arguments)]
     fn run_chain(
         &mut self,
         scene: &mut Scene,
@@ -369,6 +487,7 @@ impl ScriptRuntime {
         graph: &ScriptGraph,
         id: u64,
         start: Option<u32>,
+        other: Option<u64>,
         dt: f32,
     ) -> bool {
         let mut current = start;
@@ -416,16 +535,43 @@ impl ScriptRuntime {
                     }
                 }
                 NodeKind::AddVelocity { x, y } => scene.kicks.push((id, Vec2::new(*x, *y))),
+                NodeKind::SetVelocityX { value } => {
+                    scene.velocity_sets.push((id, Some(*value), None))
+                }
+                NodeKind::SetVelocityY { value } => {
+                    scene.velocity_sets.push((id, None, Some(*value)))
+                }
                 NodeKind::Print { text } => scene.log(text.clone()),
                 NodeKind::Wait { seconds } => {
                     if let Some(next) = graph.target(node_id, 0) {
                         self.pending.push(Pending {
                             object: id,
                             node: next,
+                            other,
                             remaining: seconds.max(0.0),
                         });
                     }
                     break;
+                }
+                NodeKind::SpawnPrefab { prefab } => {
+                    let position = scene.world_affine(id).position();
+                    match storage::load_prefab(Path::new(prefab)) {
+                        Some(data) => {
+                            storage::instantiate(scene, &data, None, Some(position));
+                        }
+                        None => scene.log(format!("could not load prefab '{prefab}'")),
+                    }
+                }
+                NodeKind::DestroyOther => {
+                    if let Some(target) = other {
+                        if target != id {
+                            scene.remove(target);
+                        }
+                    }
+                    // removing a parent also removes this object
+                    if scene.get(id).is_none() {
+                        return false;
+                    }
                 }
                 NodeKind::Destroy => {
                     scene.remove(id);
@@ -459,7 +605,11 @@ impl ScriptRuntime {
                 NodeKind::OnStart
                 | NodeKind::EveryFrame
                 | NodeKind::WhileKey { .. }
-                | NodeKind::OnKeyPressed { .. } => {}
+                | NodeKind::OnKeyPressed { .. }
+                | NodeKind::OnKeyReleased { .. }
+                | NodeKind::OnCollide { .. }
+                | NodeKind::WhileColliding { .. }
+                | NodeKind::OnStopColliding { .. } => {}
             }
 
             current = graph.target(node_id, port);
@@ -467,4 +617,29 @@ impl ScriptRuntime {
 
         true
     }
+}
+
+fn flag(condition: bool) -> Vec<Option<u64>> {
+    if condition {
+        vec![None]
+    } else {
+        Vec::new()
+    }
+}
+
+// other objects in the list for this object whose name matches the filter
+fn others(scene: &Scene, list: &[(u64, u64)], id: u64, with: &str) -> Vec<Option<u64>> {
+    let wanted = with.trim().to_lowercase();
+
+    list.iter()
+        .filter(|pair| pair.0 == id)
+        .map(|pair| pair.1)
+        .filter(|other| {
+            wanted.is_empty()
+                || scene
+                    .get(*other)
+                    .is_some_and(|o| o.name.to_lowercase() == wanted)
+        })
+        .map(Some)
+        .collect()
 }
