@@ -10,6 +10,7 @@ use crate::game_object::{GameObject, Shape, SpriteRenderer, TextureFilter, BASE}
 use crate::gizmo::{Gizmo, Snap, Tool};
 use crate::math::{capsule_outline, point_in_polygon, regular_polygon, rotate, Affine};
 use crate::scene::{Scene, WorldShape};
+use crate::script_editor::{self, ScriptEditor};
 use crate::view::View;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -17,6 +18,7 @@ pub enum ViewMode {
     Scene,
     Game,
     Both,
+    Script,
 }
 
 struct SceneCamera {
@@ -32,10 +34,15 @@ pub struct ViewportState {
     pub snap: Snap,
     camera: SceneCamera,
     gizmo: Gizmo,
+    script_editor: ScriptEditor,
     game_aspect: f32,
 }
 
 impl ViewportState {
+    pub fn capturing_key(&self) -> bool {
+        self.script_editor.capturing()
+    }
+
     pub fn new() -> Self {
         Self {
             tool: Tool::Move,
@@ -48,6 +55,7 @@ impl ViewportState {
                 zoom: 1.0,
             },
             gizmo: Gizmo::new(),
+            script_editor: ScriptEditor::default(),
             game_aspect: 16.0 / 9.0,
         }
     }
@@ -56,17 +64,23 @@ impl ViewportState {
 pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut ViewportState, playing: bool) {
     let mut spawn: Option<(PathBuf, Vec2)> = None;
 
+    if state.mode != ViewMode::Script {
+        state.script_editor.stop_capture();
+    }
+
     egui::CentralPanel::default().show(ctx, |ui| {
         ui.horizontal(|ui| {
             ui.selectable_value(&mut state.mode, ViewMode::Scene, "Scene");
             ui.selectable_value(&mut state.mode, ViewMode::Game, "Game");
             ui.selectable_value(&mut state.mode, ViewMode::Both, "Both");
+            ui.selectable_value(&mut state.mode, ViewMode::Script, "Script");
         });
         ui.separator();
 
         match state.mode {
             ViewMode::Scene => scene_view(ui, scene, state, playing, &mut spawn),
             ViewMode::Game => game_view(ui, scene, state),
+            ViewMode::Script => script_editor::show(ui, scene, &mut state.script_editor),
             ViewMode::Both => {
                 ui.columns(2, |columns| {
                     scene_view(&mut columns[0], scene, state, playing, &mut spawn);

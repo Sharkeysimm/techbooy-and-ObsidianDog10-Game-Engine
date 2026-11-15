@@ -60,6 +60,9 @@ impl PhysicsSystem {
     }
 
     pub fn step(&mut self, scene: &mut Scene) {
+        // kicks are speed changes queued by scripts
+        let kicks: Vec<(u64, eframe::egui::Vec2)> = scene.kicks.drain(..).collect();
+
         let items = collect(scene);
         let specs: Vec<Spec> = items.iter().map(|i| i.spec.clone()).collect();
 
@@ -70,6 +73,30 @@ impl PhysicsSystem {
 
         if items.is_empty() {
             return;
+        }
+
+        // anything moved from outside the simulation gets teleported
+        for (id, handle) in &self.dynamic {
+            let target = scene.world_affine(*id).position();
+            if let Some(body) = self.world.bodies.get_mut(*handle) {
+                let current = body.translation();
+                if (current.x - target.x).abs() > 0.01 || (current.y - target.y).abs() > 0.01 {
+                    body.set_translation(Vector::new(target.x, target.y), true);
+                }
+            }
+        }
+
+        // an impulse scaled by mass gives the same speed change for any size
+        for (id, velocity) in kicks {
+            let Some(entry) = self.dynamic.iter().find(|entry| entry.0 == id) else {
+                continue;
+            };
+            let handle = entry.1;
+
+            if let Some(body) = self.world.bodies.get_mut(handle) {
+                let mass = body.mass();
+                body.apply_impulse(Vector::new(velocity.x * mass, velocity.y * mass), true);
+            }
         }
 
         self.world.step();

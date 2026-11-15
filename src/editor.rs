@@ -1,4 +1,5 @@
 use eframe::egui::{self, Key};
+use std::collections::HashSet;
 use std::time::Instant;
 
 use crate::content_browser::ContentBrowser;
@@ -7,6 +8,7 @@ use crate::gizmo::Tool;
 use crate::hierarchy::HierarchyState;
 use crate::physics::PhysicsSystem;
 use crate::scene::Scene;
+use crate::script::ScriptRuntime;
 use crate::viewport::ViewportState;
 use crate::{drag, hierarchy, inspector, viewport};
 
@@ -14,6 +16,7 @@ pub struct Editor {
     scene: Scene,
     browser: ContentBrowser,
     physics: PhysicsSystem,
+    scripts: ScriptRuntime,
     viewport: ViewportState,
     hierarchy: HierarchyState,
     snapshot: Option<Vec<GameObject>>,
@@ -28,6 +31,7 @@ impl Editor {
             scene: Scene::new(),
             browser: ContentBrowser::new(),
             physics: PhysicsSystem::new(),
+            scripts: ScriptRuntime::new(),
             viewport: ViewportState::new(),
             hierarchy: HierarchyState::default(),
             snapshot: None,
@@ -40,6 +44,8 @@ impl Editor {
     // stopping restores the scene to how it was when play was pressed
     fn toggle_play(&mut self) {
         self.physics.reset();
+        self.scripts.reset();
+        self.scene.kicks.clear();
         self.physics_accumulator = 0.0;
 
         if self.is_playing {
@@ -55,12 +61,13 @@ impl Editor {
             }
         } else {
             self.snapshot = Some(self.scene.objects.clone());
+            self.scene.log.clear();
             self.is_playing = true;
         }
     }
 
     fn shortcuts(&mut self, ctx: &egui::Context) {
-        if ctx.wants_keyboard_input() {
+        if self.is_playing || self.viewport.capturing_key() || ctx.wants_keyboard_input() {
             return;
         }
 
@@ -128,7 +135,7 @@ impl Editor {
 
         self.browser.show(ctx);
         hierarchy::show(ctx, &mut self.scene, &mut self.hierarchy);
-        inspector::show(ctx, &mut self.scene);
+        inspector::show(ctx, &mut self.scene, &mut self.viewport.mode);
 
         let now = Instant::now();
         let frame_time = (now - self.last_frame).as_secs_f32().min(0.25);
@@ -138,6 +145,14 @@ impl Editor {
         const MAX_STEPS_PER_FRAME: usize = 5;
 
         if self.is_playing {
+            // typing in a text field should not drive the game
+            let held = if ctx.wants_keyboard_input() {
+                HashSet::new()
+            } else {
+                ctx.input(|i| i.keys_down.clone())
+            };
+            self.scripts.update(&mut self.scene, held, frame_time);
+
             self.physics_accumulator += frame_time;
 
             let mut steps = 0;

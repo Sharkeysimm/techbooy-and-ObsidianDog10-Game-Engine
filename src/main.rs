@@ -9,6 +9,8 @@ mod inspector;
 mod math;
 mod physics;
 mod scene;
+mod script;
+mod script_editor;
 mod view;
 mod viewport;
 

@@ -7,10 +7,12 @@ use crate::game_object::{
     SpriteRenderer, TextureFilter,
 };
 use crate::scene::Scene;
+use crate::script::ScriptGraph;
+use crate::viewport::ViewMode;
 
 const COLLIDER_NAMES: [&str; 4] = ["Box", "Circle", "Capsule", "Polygon"];
 
-pub fn show(ctx: &egui::Context, scene: &mut Scene) {
+pub fn show(ctx: &egui::Context, scene: &mut Scene, mode: &mut ViewMode) {
     egui::SidePanel::right("inspector")
         .resizable(true)
         .default_width(280.0)
@@ -42,7 +44,7 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene) {
                 ));
                 ui.separator();
 
-                components(ui, object);
+                components(ui, object, mode);
             });
         });
 }
@@ -65,13 +67,14 @@ fn default_collider(kind: usize) -> ColliderShape {
     }
 }
 
-fn components(ui: &mut egui::Ui, object: &mut GameObject) {
+fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
     let id = object.id;
     let mut remove_shape = false;
     let mut remove_sprite = false;
     let mut remove_camera = false;
     let mut remove_body = false;
     let mut remove_collider = false;
+    let mut remove_script = false;
 
     component(ui, ("transform", id), "Transform", false, |ui| {
         let t = &mut object.transform;
@@ -226,6 +229,19 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject) {
         });
     }
 
+    if let Some(graph) = &object.script {
+        let nodes = graph.nodes.len();
+        remove_script = component(ui, ("script", id), "Visual Script", true, |ui| {
+            ui.label(format!("{nodes} nodes"));
+            if ui.button("Open Script Editor").clicked() {
+                *mode = ViewMode::Script;
+            }
+        });
+    }
+
+    if remove_script {
+        object.script = None;
+    }
     if remove_camera {
         object.camera = None;
     }
@@ -293,6 +309,16 @@ fn add_component_menu(ui: &mut egui::Ui, object: &mut GameObject) {
                     object.collider = Some(collider);
                     ui.close_menu();
                 }
+            }
+        });
+
+        ui.menu_button("Scripting", |ui| {
+            if ui
+                .add_enabled(object.script.is_none(), egui::Button::new("Visual Script"))
+                .clicked()
+            {
+                object.script = Some(ScriptGraph::starter());
+                ui.close_menu();
             }
         });
     });

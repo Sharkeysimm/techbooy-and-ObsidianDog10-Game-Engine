@@ -1,5 +1,7 @@
 use eframe::egui::Color32;
 
+use crate::script::ScriptGraph;
+
 // size in pixels of a shape at scale 1
 pub const BASE: f32 = 100.0;
 
@@ -178,6 +180,7 @@ pub struct GameObject {
     pub camera: Option<Camera2D>,
     pub rigidbody: Option<Rigidbody2D>,
     pub collider: Option<Collider2D>,
+    pub script: Option<ScriptGraph>,
 }
 
 impl GameObject {
@@ -193,6 +196,7 @@ impl GameObject {
             camera: None,
             rigidbody: None,
             collider: None,
+            script: None,
         }
     }
 
