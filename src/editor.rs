@@ -1,6 +1,6 @@
 use eframe::egui::{self, Key};
-use std::collections::HashSet;
 use std::time::Instant;
+use mlua::{Function, Lua};
 
 use crate::content_browser::ContentBrowser;
 use crate::game_object::GameObject;
@@ -8,8 +8,6 @@ use crate::gizmo::Tool;
 use crate::hierarchy::HierarchyState;
 use crate::physics::PhysicsSystem;
 use crate::scene::Scene;
-use crate::storage;
-use crate::script::ScriptRuntime;
 use crate::viewport::ViewportState;
 use crate::{drag, hierarchy, inspector, viewport};
 
@@ -17,13 +15,17 @@ pub struct Editor {
     scene: Scene,
     browser: ContentBrowser,
     physics: PhysicsSystem,
-    scripts: ScriptRuntime,
     viewport: ViewportState,
     hierarchy: HierarchyState,
     snapshot: Option<Vec<GameObject>>,
     last_frame: Instant,
     physics_accumulator: f32,
     is_playing: bool,
+
+    lua: Lua,
+    lua_on_update: Option<Function>,
+    script_source: String,
+    script_error: Option<String>,
 }
 
 impl Editor {
@@ -32,21 +34,56 @@ impl Editor {
             scene: Scene::new(),
             browser: ContentBrowser::new(),
             physics: PhysicsSystem::new(),
-            scripts: ScriptRuntime::new(),
             viewport: ViewportState::new(),
             hierarchy: HierarchyState::default(),
             snapshot: None,
             last_frame: Instant::now(),
             physics_accumulator: 0.0,
             is_playing: false,
+            lua: Lua::new(),
+            lua_on_update: None,
+            script_source: r#"function on_start()
+                print("Game started")
+            end
+
+            function on_update(dt)
+                -- Runs once per fixed game step.
+            end
+            "#
+            .to_string(),
+            script_error: None,
         }
+    }
+
+    fn start_script(&mut self) {
+        // Prevent callbacks from a previous run lingering if the new script omits them.
+        let globals = self.lua.globals();
+        let _ = globals.set("on_start", mlua::Value::Nil);
+        let _ = globals.set("on_update", mlua::Value::Nil);
+        self.lua_on_update = None;
+
+        let result = (|| -> mlua::Result<()> {
+            self.lua
+                .load(&self.script_source)
+                .set_name("main.lua")
+                .exec()?;
+
+            let globals = self.lua.globals();
+
+            if let Ok(on_start) = globals.get::<Function>("on_start") {
+                on_start.call::<()>(())?;
+            }
+
+            self.lua_on_update = globals.get::<Function>("on_update").ok();
+            Ok(())
+        })();
+
+        self.script_error = result.err().map(|error| error.to_string());
     }
 
     // stopping restores the scene to how it was when play was pressed
     fn toggle_play(&mut self) {
         self.physics.reset();
-        self.scripts.reset();
-        self.scene.kicks.clear();
         self.physics_accumulator = 0.0;
 
         if self.is_playing {
@@ -62,13 +99,13 @@ impl Editor {
             }
         } else {
             self.snapshot = Some(self.scene.objects.clone());
-            self.scene.log.clear();
             self.is_playing = true;
+            self.start_script();
         }
     }
 
     fn shortcuts(&mut self, ctx: &egui::Context) {
-        if self.is_playing || self.viewport.capturing_key() || ctx.wants_keyboard_input() {
+        if ctx.wants_keyboard_input() {
             return;
         }
 
@@ -97,44 +134,7 @@ impl Editor {
         }
     }
 
-    // saving needs the scene and the folder the content browser is showing
-    fn handle_saves(&mut self) {
-        if let Some(id) = self.browser.take_prefab_request() {
-            let result = storage::save_prefab(&self.scene, id, self.browser.current_dir());
-            self.report_save(result);
-        }
-
-        if self.viewport.take_script_save() {
-            let saved = self
-                .scene
-                .selected
-                .and_then(|id| self.scene.get(id))
-                .and_then(|object| {
-                    object.script.as_ref().map(|graph| {
-                        storage::save_script(graph, &object.name, self.browser.current_dir())
-                    })
-                });
-
-            if let Some(result) = saved {
-                self.report_save(result);
-            }
-        }
-    }
-
-    fn report_save(&mut self, result: std::io::Result<std::path::PathBuf>) {
-        match result {
-            Ok(path) => self.scene.log(format!("saved {}", path.display())),
-            Err(error) => self.scene.log(format!("could not save: {error}")),
-        }
-        self.browser.refresh();
-    }
-
     pub fn ui(&mut self, ctx: &egui::Context) {
-        if ctx.input(|i| i.key_pressed(Key::F11)) {
-            let fullscreen = ctx.input(|i| i.viewport().fullscreen.unwrap_or(false));
-            ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(!fullscreen));
-        }
-
         self.shortcuts(ctx);
 
         egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
@@ -171,15 +171,22 @@ impl Editor {
             });
         });
 
-        self.browser.show(ctx);
-        if let Some(path) = self.browser.take_script_open_request() {
-            match storage::load_script(&path) {
-                Some(graph) => self.viewport.open_script_asset(path, graph),
-                None => self.scene.log(format!("could not open {}", path.display())),
-            }
+        let run_requested = viewport::show(
+            ctx,
+            &mut self.scene,
+            &mut self.viewport,
+            self.is_playing,
+            &mut self.script_source,
+            self.script_error.as_deref(),
+        );
+
+        if run_requested {
+            self.start_script();
         }
+
+        self.browser.show(ctx);
         hierarchy::show(ctx, &mut self.scene, &mut self.hierarchy);
-        inspector::show(ctx, &mut self.scene, &mut self.viewport.mode);
+        inspector::show(ctx, &mut self.scene);
 
         let now = Instant::now();
         let frame_time = (now - self.last_frame).as_secs_f32().min(0.25);
@@ -189,26 +196,32 @@ impl Editor {
         const MAX_STEPS_PER_FRAME: usize = 5;
 
         if self.is_playing {
-            // typing in a text field should not drive the game
-            let held = if ctx.wants_keyboard_input() {
-                HashSet::new()
-            } else {
-                ctx.input(|i| i.keys_down.clone())
-            };
-            self.scripts.update(&mut self.scene, held, frame_time);
-
             self.physics_accumulator += frame_time;
 
             let mut steps = 0;
             while self.physics_accumulator >= FIXED_STEP && steps < MAX_STEPS_PER_FRAME {
+                let update_result = self.lua_on_update
+                    .as_ref()
+                    .map(|function| function.call::<()>(FIXED_STEP));
+
+                if let Some(Err(error)) = update_result {
+                    eprintln!("Lua update error: {error}");
+                    self.lua_on_update = None;
+                }
                 self.physics.step(&mut self.scene);
                 self.physics_accumulator -= FIXED_STEP;
                 steps += 1;
             }
         }
 
-        viewport::show(ctx, &mut self.scene, &mut self.viewport, self.is_playing);
-        self.handle_saves();
+        viewport::show(
+            ctx, 
+            &mut self.scene, 
+            &mut self.viewport, 
+            self.is_playing, 
+            &mut self.script_source,
+            self.script_error.as_deref(),
+        );
         drag::paint_ghost(ctx, &self.scene);
         ctx.request_repaint();
     }

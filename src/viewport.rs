@@ -4,15 +4,12 @@ use eframe::egui::{
 };
 use std::path::PathBuf;
 
-use crate::assets::{image_uri, is_image, is_prefab, is_vscript};
+use crate::assets::{image_uri, is_image};
 use crate::drag::AssetPayload;
 use crate::game_object::{GameObject, Shape, SpriteRenderer, TextureFilter, BASE};
 use crate::gizmo::{Gizmo, Snap, Tool};
 use crate::math::{capsule_outline, point_in_polygon, regular_polygon, rotate, Affine};
 use crate::scene::{Scene, WorldShape};
-use crate::script::ScriptGraph;
-use crate::script_editor::{self, ScriptEditor};
-use crate::storage;
 use crate::view::View;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -36,24 +33,10 @@ pub struct ViewportState {
     pub snap: Snap,
     camera: SceneCamera,
     gizmo: Gizmo,
-    script_editor: ScriptEditor,
     game_aspect: f32,
 }
 
 impl ViewportState {
-    pub fn capturing_key(&self) -> bool {
-        self.script_editor.capturing()
-    }
-
-    pub fn open_script_asset(&mut self, path: PathBuf, graph: ScriptGraph) {
-        self.mode = ViewMode::Script;
-        self.script_editor.open_asset(path, graph);
-    }
-
-    pub fn take_script_save(&mut self) -> bool {
-        self.script_editor.take_save_request()
-    }
-
     pub fn new() -> Self {
         Self {
             tool: Tool::Move,
@@ -66,59 +49,7 @@ impl ViewportState {
                 zoom: 1.0,
             },
             gizmo: Gizmo::new(),
-            script_editor: ScriptEditor::default(),
             game_aspect: 16.0 / 9.0,
-        }
-    }
-}
-
-pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut ViewportState, playing: bool) {
-    let mut spawn: Option<(PathBuf, Vec2)> = None;
-
-    if state.mode != ViewMode::Script {
-        state.script_editor.stop_capture();
-    }
-
-    egui::CentralPanel::default().show(ctx, |ui| {
-        ui.horizontal(|ui| {
-            ui.selectable_value(&mut state.mode, ViewMode::Scene, "Scene");
-            ui.selectable_value(&mut state.mode, ViewMode::Game, "Game");
-            ui.selectable_value(&mut state.mode, ViewMode::Both, "Both");
-            ui.selectable_value(&mut state.mode, ViewMode::Script, "Script");
-        });
-        ui.separator();
-
-        match state.mode {
-            ViewMode::Scene => scene_view(ui, scene, state, playing, &mut spawn),
-            ViewMode::Game => game_view(ui, scene, state),
-            ViewMode::Script => script_editor::show(ui, scene, &mut state.script_editor),
-            ViewMode::Both => {
-                ui.columns(2, |columns| {
-                    scene_view(&mut columns[0], scene, state, playing, &mut spawn);
-                    game_view(&mut columns[1], scene, state);
-                });
-            }
-        }
-    });
-
-    if let Some((path, position)) = spawn {
-        if is_prefab(&path) {
-            if let Some(prefab) = storage::load_prefab(&path) {
-                scene.selected = storage::instantiate(scene, &prefab, None, Some(position));
-            }
-        } else {
-            let name = path
-                .file_stem()
-                .map(|s| s.to_string_lossy().into_owned())
-                .unwrap_or_else(|| "Sprite".into());
-
-            let id = scene.add(GameObject::sprite(
-                name,
-                image_uri(&path),
-                position.x,
-                position.y,
-            ));
-            scene.selected = Some(id);
         }
     }
 }
@@ -194,28 +125,15 @@ fn scene_view(
 
     let hovering_image = response
         .dnd_hover_payload::<AssetPayload>()
-        .is_some_and(|p| is_image(&p.path) || is_prefab(&p.path) || is_vscript(&p.path));
+        .is_some_and(|p| is_image(&p.path));
     if hovering_image {
         painter.rect_filled(rect, 0.0, Color32::from_rgba_unmultiplied(70, 130, 220, 40));
     }
 
     if let Some(payload) = response.dnd_release_payload::<AssetPayload>() {
         let pointer = ui.input(|i| i.pointer.latest_pos());
-        let accepted = is_image(&payload.path) || is_prefab(&payload.path);
-        if let (true, Some(pointer)) = (accepted, pointer) {
+        if let (true, Some(pointer)) = (is_image(&payload.path), pointer) {
             *spawn = Some((payload.path.clone(), view.to_world(pointer)));
-        }
-
-        // dropping a script on an object gives it that script
-        if let (true, Some(pointer)) = (is_vscript(&payload.path), pointer) {
-            if let Some(id) = pick(scene, &view, pointer) {
-                if let Some(graph) = storage::load_script(&payload.path) {
-                    if let Some(object) = scene.get_mut(id) {
-                        object.script = Some(graph);
-                    }
-                    scene.selected = Some(id);
-                }
-            }
         }
     }
 
@@ -254,6 +172,82 @@ fn game_view(ui: &mut egui::Ui, scene: &Scene, state: &mut ViewportState) {
     for id in scene.draw_order() {
         draw_object(ui, &painter, scene, id, &view, false);
     }
+}
+
+fn script_view(
+    ui: &mut egui::Ui,
+    script_source: &mut String,
+    script_error: Option<&str>,
+) -> bool {
+    ui.heading("Lua Script");
+
+    ui.add(
+        egui::TextEdit::multiline(script_source)
+            .code_editor()
+            .desired_width(f32::INFINITY)
+            .desired_rows(24),
+    );
+
+    let run_clicked = ui.button("Run script").clicked();
+
+    if let Some(error) = script_error {
+        ui.colored_label(egui::Color32::RED, error);
+    }
+
+    run_clicked
+}
+
+pub fn show(
+    ctx: &egui::Context,
+    scene: &mut Scene,
+    state: &mut ViewportState,
+    playing: bool,
+    script_source: &mut String,
+    script_error: Option<&str>,
+) -> bool {
+    let mut spawn: Option<(PathBuf, Vec2)> = None;
+    let mut requested = false;
+
+    egui::CentralPanel::default().show(ctx, |ui| {
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut state.mode, ViewMode::Scene, "Scene");
+            ui.selectable_value(&mut state.mode, ViewMode::Game, "Game");
+            ui.selectable_value(&mut state.mode, ViewMode::Both, "Both");
+            ui.selectable_value(&mut state.mode, ViewMode::Script, "Script");
+        });
+        ui.separator();
+
+        match state.mode {
+            ViewMode::Scene => scene_view(ui, scene, state, playing, &mut spawn),
+            ViewMode::Game => game_view(ui, scene, state),
+            ViewMode::Script => {
+                requested = script_view(ui, script_source, script_error);
+            }
+            ViewMode::Both => {
+                ui.columns(2, |columns| {
+                    scene_view(&mut columns[0], scene, state, playing, &mut spawn);
+                    game_view(&mut columns[1], scene, state);
+                });
+            }
+        }
+    });
+
+    if let Some((path, position)) = spawn {
+        let name = path
+            .file_stem()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_else(|| "Sprite".into());
+
+        let id = scene.add(GameObject::sprite(
+            name,
+            image_uri(&path),
+            position.x,
+            position.y,
+        ));
+        scene.selected = Some(id);
+    }
+
+    requested
 }
 
 fn camera_input(ui: &egui::Ui, response: &egui::Response, rect: Rect, camera: &mut SceneCamera) {
@@ -391,18 +385,6 @@ fn draw_sprite(
     view: &View,
     sprite: &SpriteRenderer,
 ) {
-    // no texture picked yet shows the same magenta as a missing file
-    if sprite.texture.is_empty() {
-        draw_shape(
-            painter,
-            affine,
-            view,
-            Shape::Square,
-            Color32::from_rgb(255, 0, 255),
-        );
-        return;
-    }
-
     let options = match sprite.filter {
         TextureFilter::Nearest => TextureOptions::NEAREST,
         TextureFilter::Linear => TextureOptions::LINEAR,

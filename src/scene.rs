@@ -19,9 +19,6 @@ pub struct WorldCollider {
 pub struct Scene {
     pub objects: Vec<GameObject>,
     pub selected: Option<u64>,
-    pub log: Vec<String>,
-    pub kicks: Vec<(u64, Vec2)>,
-    pub velocity_sets: Vec<(u64, Option<f32>, Option<f32>)>,
     next_id: u64,
 }
 
@@ -30,9 +27,6 @@ impl Scene {
         let mut scene = Self {
             objects: Vec::new(),
             selected: None,
-            log: Vec::new(),
-            kicks: Vec::new(),
-            velocity_sets: Vec::new(),
             next_id: 1,
         };
         let mut camera = GameObject::camera();
@@ -51,14 +45,6 @@ impl Scene {
         let id = object.id;
         self.objects.push(object);
         id
-    }
-
-    pub fn log(&mut self, message: String) {
-        println!("{message}");
-        self.log.push(message);
-        if self.log.len() > 200 {
-            self.log.remove(0);
-        }
     }
 
     pub fn get(&self, id: u64) -> Option<&GameObject> {
