@@ -1,9 +1,12 @@
 use eframe::egui::Color32;
+use serde::{Deserialize, Serialize};
+
+use crate::script::ScriptGraph;
 
 // size in pixels of a shape at scale 1
 pub const BASE: f32 = 100.0;
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum Shape {
     Square,
     Circle,
@@ -26,20 +29,20 @@ impl Shape {
     ];
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum TextureFilter {
     Nearest,
     Linear,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum BodyType {
     Dynamic,
     Kinematic,
     Fixed,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub enum ColliderShape {
     Box { size_x: f32, size_y: f32 },
     Circle { radius: f32 },
@@ -47,12 +50,7 @@ pub enum ColliderShape {
     Polygon { sides: u32, radius: f32 },
 }
 
-#[derive(Clone)]
-pub struct ScriptComponent {
-    pub path: String,
-}
-
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Transform {
     pub x: f32,
     pub y: f32,
@@ -73,22 +71,25 @@ impl Default for Transform {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct ShapeRenderer {
     pub shape: Shape,
+    #[serde(with = "crate::serde_util::color")]
     pub color: Color32,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct SpriteRenderer {
     pub texture: String,
     pub filter: TextureFilter,
+    #[serde(with = "crate::serde_util::color")]
     pub tint: Color32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Camera2D {
     pub size: f32,
+    #[serde(with = "crate::serde_util::color")]
     pub background: Color32,
 }
 
@@ -101,10 +102,14 @@ impl Default for Camera2D {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Rigidbody2D {
     pub body: BodyType,
     pub gravity_scale: f32,
+    #[serde(default)]
+    pub freeze_x: bool,
+    #[serde(default)]
+    pub freeze_y: bool,
     pub lock_rotation: bool,
 }
 
@@ -113,15 +118,19 @@ impl Default for Rigidbody2D {
         Self {
             body: BodyType::Dynamic,
             gravity_scale: 1.0,
+            freeze_x: false,
+            freeze_y: false,
             lock_rotation: false,
         }
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Collider2D {
     pub shape: ColliderShape,
     pub bounciness: f32,
+    #[serde(default)]
+    pub is_trigger: bool,
 }
 
 impl Collider2D {
@@ -129,6 +138,7 @@ impl Collider2D {
         Self {
             shape,
             bounciness: 0.0,
+            is_trigger: false,
         }
     }
 
@@ -171,7 +181,7 @@ impl Collider2D {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct GameObject {
     pub id: u64,
     pub name: String,
@@ -183,7 +193,7 @@ pub struct GameObject {
     pub camera: Option<Camera2D>,
     pub rigidbody: Option<Rigidbody2D>,
     pub collider: Option<Collider2D>,
-    pub script: Option<ScriptComponent>,
+    pub script: Option<ScriptGraph>,
 }
 
 impl GameObject {

@@ -1,16 +1,19 @@
 use eframe::egui::{self, Align, Align2, Color32, FontId, Layout, Sense};
 
-use crate::assets::{image_uri, is_image};
+use crate::assets::{image_uri, is_image, is_vscript};
 use crate::drag::AssetPayload;
 use crate::game_object::{
     BodyType, Camera2D, Collider2D, ColliderShape, GameObject, Rigidbody2D, Shape, ShapeRenderer,
-    SpriteRenderer, TextureFilter, ScriptComponent,
+    SpriteRenderer, TextureFilter,
 };
 use crate::scene::Scene;
+use crate::script::ScriptGraph;
+use crate::storage;
+use crate::viewport::ViewMode;
 
 const COLLIDER_NAMES: [&str; 4] = ["Box", "Circle", "Capsule", "Polygon"];
 
-pub fn show(ctx: &egui::Context, scene: &mut Scene) {
+pub fn show(ctx: &egui::Context, scene: &mut Scene, mode: &mut ViewMode) {
     egui::SidePanel::right("inspector")
         .resizable(true)
         .default_width(280.0)
@@ -42,7 +45,7 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene) {
                 ));
                 ui.separator();
 
-                components(ui, object);
+                components(ui, object, mode);
             });
         });
 }
@@ -65,13 +68,14 @@ fn default_collider(kind: usize) -> ColliderShape {
     }
 }
 
-fn components(ui: &mut egui::Ui, object: &mut GameObject) {
+fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
     let id = object.id;
     let mut remove_shape = false;
     let mut remove_sprite = false;
     let mut remove_camera = false;
     let mut remove_body = false;
     let mut remove_collider = false;
+    let mut remove_script = false;
 
     component(ui, ("transform", id), "Transform", false, |ui| {
         let t = &mut object.transform;
@@ -111,33 +115,43 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject) {
         });
     }
 
-if let Some(renderer) = object.shape_renderer.as_mut() {
-    remove_shape = component(ui, ("shape", id), "Shape Renderer", true, |ui| {
-        ui.push_id(("shape_picker", id), |ui| {
+    if let Some(renderer) = object.shape_renderer.as_mut() {
+        remove_shape = component(ui, ("shape", id), "Shape Renderer", true, |ui| {
             egui::ComboBox::from_label("Shape")
                 .selected_text(format!("{:?}", renderer.shape))
                 .show_ui(ui, |ui| {
                     for shape in Shape::ALL {
-                        ui.selectable_value(
-                            &mut renderer.shape,
-                            shape,
-                            format!("{shape:?}"),
-                        );
+                        ui.selectable_value(&mut renderer.shape, shape, format!("{shape:?}"));
                     }
                 });
+            ui.horizontal(|ui| {
+                ui.label("Color");
+                ui.color_edit_button_srgba(&mut renderer.color);
+            });
         });
-
-        ui.horizontal(|ui| {
-            ui.label("Color");
-            ui.color_edit_button_srgba(&mut renderer.color);
-        });
-    });
-}
+    }
 
     if let Some(sprite) = object.sprite_renderer.as_mut() {
         remove_sprite = component(ui, ("sprite", id), "Sprite Renderer", true, |ui| {
-            let name = sprite.texture.rsplit('/').next().unwrap_or(&sprite.texture);
-            ui.label(format!("Texture: {name}"));
+            let shown = if sprite.texture.is_empty() {
+                "none".to_string()
+            } else {
+                sprite
+                    .texture
+                    .rsplit('/')
+                    .next()
+                    .unwrap_or(&sprite.texture)
+                    .to_string()
+            };
+
+            egui::ComboBox::from_label("Texture")
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    for path in storage::list_images() {
+                        let label = path.rsplit('/').next().unwrap_or(&path).to_string();
+                        ui.selectable_value(&mut sprite.texture, format!("file://{path}"), label);
+                    }
+                });
 
             egui::ComboBox::from_label("Filter")
                 .selected_text(format!("{:?}", sprite.filter))
@@ -166,7 +180,12 @@ if let Some(renderer) = object.shape_renderer.as_mut() {
                 ui.label("Gravity scale");
                 ui.add(egui::DragValue::new(&mut body.gravity_scale).speed(0.05));
             });
-            ui.checkbox(&mut body.lock_rotation, "Lock rotation");
+            ui.horizontal(|ui| {
+                ui.label("Freeze position");
+                ui.checkbox(&mut body.freeze_x, "X");
+                ui.checkbox(&mut body.freeze_y, "Y");
+            });
+            ui.checkbox(&mut body.lock_rotation, "Freeze rotation");
 
             if !has_collider {
                 ui.colored_label(Color32::YELLOW, "needs a collider to collide");
@@ -229,10 +248,24 @@ if let Some(renderer) = object.shape_renderer.as_mut() {
                 }
             }
 
+            ui.checkbox(&mut collider.is_trigger, "Is trigger");
             ui.add(egui::Slider::new(&mut collider.bounciness, 0.0..=1.0).text("Bounciness"));
         });
     }
 
+    if let Some(graph) = &object.script {
+        let nodes = graph.nodes.len();
+        remove_script = component(ui, ("script", id), "Visual Script", true, |ui| {
+            ui.label(format!("{nodes} nodes"));
+            if ui.button("Open Script Editor").clicked() {
+                *mode = ViewMode::Script;
+            }
+        });
+    }
+
+    if remove_script {
+        object.script = None;
+    }
     if remove_camera {
         object.camera = None;
     }
@@ -266,6 +299,23 @@ fn add_component_menu(ui: &mut egui::Ui, object: &mut GameObject) {
                     shape: Shape::Square,
                     color: Color32::WHITE,
                 });
+                ui.close_menu();
+            }
+
+            if ui
+                .add_enabled(
+                    object.sprite_renderer.is_none(),
+                    egui::Button::new("Sprite Renderer"),
+                )
+                .clicked()
+            {
+                // a sprite replaces the shape so only one visual is drawn
+                object.sprite_renderer = Some(SpriteRenderer {
+                    texture: String::new(),
+                    filter: TextureFilter::Nearest,
+                    tint: Color32::WHITE,
+                });
+                object.shape_renderer = None;
                 ui.close_menu();
             }
 
@@ -305,12 +355,10 @@ fn add_component_menu(ui: &mut egui::Ui, object: &mut GameObject) {
 
         ui.menu_button("Scripting", |ui| {
             if ui
-                .add_enabled(object.script.is_none(), egui::Button::new("Script"))
+                .add_enabled(object.script.is_none(), egui::Button::new("Visual Script"))
                 .clicked()
             {
-                object.script = Some(ScriptComponent {
-                    path: "scripts/player.lua".to_string(),
-                });
+                object.script = Some(ScriptGraph::starter());
                 ui.close_menu();
             }
         });
@@ -325,7 +373,7 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
 
     let hovering = response
         .dnd_hover_payload::<AssetPayload>()
-        .is_some_and(|p| is_image(&p.path));
+        .is_some_and(|p| is_image(&p.path) || is_vscript(&p.path));
     let fill = if hovering {
         Color32::from_rgba_unmultiplied(70, 130, 220, 70)
     } else {
@@ -336,7 +384,7 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
     ui.painter().text(
         rect.center(),
         Align2::CENTER_CENTER,
-        "Drop an image here to set the sprite",
+        "Drop an image or script here",
         FontId::proportional(12.0),
         ui.visuals().weak_text_color(),
     );
@@ -349,6 +397,10 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
                 tint: Color32::WHITE,
             });
             object.shape_renderer = None;
+        } else if is_vscript(&payload.path) {
+            if let Some(graph) = storage::load_script(&payload.path) {
+                object.script = Some(graph);
+            }
         }
     }
 }

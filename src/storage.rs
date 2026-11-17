@@ -5,7 +5,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::assets::{is_image, is_prefab, ROOT};
+use crate::assets::{is_image, is_prefab, is_scene, ROOT};
 use crate::game_object::{GameObject, Transform};
 use crate::scene::Scene;
 use crate::script::ScriptGraph;
@@ -124,6 +124,52 @@ pub fn instantiate(
         scene.set_world_position(root, position);
     }
     Some(root)
+}
+
+#[derive(Serialize)]
+struct SceneRef<'a> {
+    objects: &'a [GameObject],
+    next_id: u64,
+}
+
+#[derive(Deserialize)]
+struct SceneFile {
+    objects: Vec<GameObject>,
+    next_id: u64,
+}
+
+// compact form used to tell whether a scene changed since it was saved
+pub fn scene_json(scene: &Scene) -> String {
+    serde_json::to_string(&scene.objects).unwrap_or_default()
+}
+
+pub fn write_scene(scene: &Scene, path: &Path) -> io::Result<()> {
+    let file = SceneRef {
+        objects: &scene.objects,
+        next_id: scene.next_id(),
+    };
+    let json = serde_json::to_string_pretty(&file).map_err(io::Error::other)?;
+    fs::write(path, json)
+}
+
+pub fn save_scene_as(scene: &Scene, dir: &Path, name: &str) -> io::Result<PathBuf> {
+    let path = unique_path(dir, &clean_name(name), "scene");
+    write_scene(scene, &path)?;
+    Ok(path)
+}
+
+pub fn create_scene_file(dir: &Path) -> io::Result<PathBuf> {
+    save_scene_as(&Scene::blank(), dir, "New Scene")
+}
+
+pub fn load_scene(path: &Path) -> Option<Scene> {
+    let text = fs::read_to_string(path).ok()?;
+    let file: SceneFile = serde_json::from_str(&text).ok()?;
+    Some(Scene::from_parts(file.objects, file.next_id))
+}
+
+pub fn list_scenes() -> Vec<String> {
+    list_matching(is_scene)
 }
 
 pub fn save_script(graph: &ScriptGraph, name: &str, dir: &Path) -> io::Result<PathBuf> {

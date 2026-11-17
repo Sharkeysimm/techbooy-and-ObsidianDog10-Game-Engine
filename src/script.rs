@@ -73,6 +73,7 @@ pub enum NodeKind {
     Print { text: String },
     Wait { seconds: f32 },
     SpawnPrefab { prefab: String },
+    LoadScene { scene: String },
     DestroyOther,
     Destroy,
     IfKey {
@@ -108,6 +109,7 @@ impl NodeKind {
             NodeKind::Print { .. } => "Print",
             NodeKind::Wait { .. } => "Wait",
             NodeKind::SpawnPrefab { .. } => "Spawn Prefab",
+            NodeKind::LoadScene { .. } => "Load Scene",
             NodeKind::DestroyOther => "Destroy Other",
             NodeKind::Destroy => "Destroy Self",
             NodeKind::IfKey { .. } => "If Key Held",
@@ -137,7 +139,7 @@ impl NodeKind {
     // an empty label means one plain output
     pub fn outputs(&self) -> &'static [&'static str] {
         match self {
-            NodeKind::Destroy => &[],
+            NodeKind::Destroy | NodeKind::LoadScene { .. } => &[],
             NodeKind::IfKey { .. } | NodeKind::IfCompare { .. } => &["True", "False"],
             _ => &[""],
         }
@@ -181,6 +183,9 @@ impl NodeKind {
                     NodeKind::Wait { seconds: 1.0 },
                     NodeKind::SpawnPrefab {
                         prefab: String::new(),
+                    },
+                    NodeKind::LoadScene {
+                        scene: String::new(),
                     },
                     NodeKind::DestroyOther,
                     NodeKind::Destroy,
@@ -561,6 +566,14 @@ impl ScriptRuntime {
                         }
                         None => scene.log(format!("could not load prefab '{prefab}'")),
                     }
+                }
+                NodeKind::LoadScene { scene: target } => {
+                    if target.is_empty() {
+                        scene.log("pick a scene in the Load Scene node".into());
+                    } else {
+                        scene.pending_scene = Some(target.clone());
+                    }
+                    break;
                 }
                 NodeKind::DestroyOther => {
                     if let Some(target) = other {

@@ -5,8 +5,10 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::assets::{image_uri, is_image};
-use crate::drag::AssetPayload;
+use crate::assets::{image_uri, is_image, is_prefab, is_scene, is_vscript};
+use crate::drag::{AssetPayload, ObjectPayload};
+use crate::script::ScriptGraph;
+use crate::storage;
 
 const ROOT: &str = "assets";
 const ROOT_LABEL: &str = "Content";
@@ -39,6 +41,9 @@ pub struct ContentBrowser {
     current: PathBuf,
     selected: Option<PathBuf>,
     pending_delete: Option<PathBuf>,
+    prefab_request: Option<u64>,
+    script_open_request: Option<PathBuf>,
+    scene_open_request: Option<PathBuf>,
     renaming: Option<Rename>,
     search: String,
     icon_size: f32,
@@ -58,6 +63,9 @@ impl ContentBrowser {
             root,
             selected: None,
             pending_delete: None,
+            prefab_request: None,
+            script_open_request: None,
+            scene_open_request: None,
             renaming: None,
             search: String::new(),
             icon_size: 72.0,
@@ -66,6 +74,22 @@ impl ContentBrowser {
         };
         browser.refresh();
         browser
+    }
+
+    pub fn current_dir(&self) -> &Path {
+        &self.current
+    }
+
+    pub fn take_scene_open_request(&mut self) -> Option<PathBuf> {
+        self.scene_open_request.take()
+    }
+
+    pub fn take_script_open_request(&mut self) -> Option<PathBuf> {
+        self.script_open_request.take()
+    }
+
+    pub fn take_prefab_request(&mut self) -> Option<u64> {
+        self.prefab_request.take()
     }
 
     pub fn show(&mut self, ctx: &egui::Context) {
@@ -96,7 +120,12 @@ impl ContentBrowser {
                 let mut rename_request: Option<PathBuf> = None;
                 let mut rename_result: Option<RenameOutcome> = None;
                 let mut new_folder = false;
+                let mut new_script = false;
+                let mut open_script: Option<PathBuf> = None;
+                let mut open_scene: Option<PathBuf> = None;
+                let mut new_scene = false;
                 let mut refresh = false;
+                let mut prefab_drop: Option<u64> = None;
 
                 egui::SidePanel::left("folder_tree")
                     .resizable(true)
@@ -116,11 +145,38 @@ impl ContentBrowser {
                             new_folder = true;
                             ui.close_menu();
                         }
+                        if ui.button("New Visual Script").clicked() {
+                            new_script = true;
+                            ui.close_menu();
+                        }
+                        if ui.button("New Scene").clicked() {
+                            new_scene = true;
+                            ui.close_menu();
+                        }
                         if ui.button("Refresh").clicked() {
                             refresh = true;
                             ui.close_menu();
                         }
                     });
+
+                    if background.dnd_hover_payload::<ObjectPayload>().is_some() {
+                        let rect = ui.max_rect();
+                        ui.painter().rect_filled(
+                            rect,
+                            0.0,
+                            Color32::from_rgba_unmultiplied(70, 130, 220, 40),
+                        );
+                        ui.painter().text(
+                            rect.center(),
+                            Align2::CENTER_CENTER,
+                            "Drop to save as prefab",
+                            FontId::proportional(16.0),
+                            Color32::WHITE,
+                        );
+                    }
+                    if let Some(payload) = background.dnd_release_payload::<ObjectPayload>() {
+                        prefab_drop = Some(payload.id);
+                    }
 
                     let filter = self.search.to_lowercase();
 
@@ -151,18 +207,36 @@ impl ContentBrowser {
                                     if response.clicked() {
                                         self.selected = Some(entry.path.clone());
                                     }
-                                    if is_image(&entry.path) {
+                                    if is_image(&entry.path)
+                                        || is_prefab(&entry.path)
+                                        || is_vscript(&entry.path)
+                                    {
                                         response.dnd_set_drag_payload(AssetPayload {
                                             path: entry.path.clone(),
                                         });
                                     }
-                                    if response.double_clicked() && entry.is_dir {
-                                        navigate = Some(entry.path.clone());
+                                    if response.double_clicked() {
+                                        if entry.is_dir {
+                                            navigate = Some(entry.path.clone());
+                                        } else if is_vscript(&entry.path) {
+                                            open_script = Some(entry.path.clone());
+                                        } else if is_scene(&entry.path) {
+                                            open_scene = Some(entry.path.clone());
+                                        }
                                     }
 
                                     response.context_menu(|ui| {
-                                        if entry.is_dir && ui.button("Open").clicked() {
-                                            navigate = Some(entry.path.clone());
+                                        let openable = entry.is_dir
+                                            || is_vscript(&entry.path)
+                                            || is_scene(&entry.path);
+                                        if openable && ui.button("Open").clicked() {
+                                            if entry.is_dir {
+                                                navigate = Some(entry.path.clone());
+                                            } else if is_scene(&entry.path) {
+                                                open_scene = Some(entry.path.clone());
+                                            } else {
+                                                open_script = Some(entry.path.clone());
+                                            }
                                             ui.close_menu();
                                         }
                                         if ui.button("Rename").clicked() {
@@ -196,6 +270,21 @@ impl ContentBrowser {
                 if new_folder {
                     self.create_folder();
                 }
+                if new_script {
+                    self.create_script();
+                }
+                if open_script.is_some() {
+                    self.script_open_request = open_script;
+                }
+                if open_scene.is_some() {
+                    self.scene_open_request = open_scene;
+                }
+                if new_scene {
+                    self.create_scene();
+                }
+                if prefab_drop.is_some() {
+                    self.prefab_request = prefab_drop;
+                }
                 if refresh {
                     ui.ctx().forget_all_images();
                     self.refresh();
@@ -228,6 +317,14 @@ impl ContentBrowser {
             ui.menu_button("Create", |ui| {
                 if ui.button("Folder").clicked() {
                     self.create_folder();
+                    ui.close_menu();
+                }
+                if ui.button("Visual Script").clicked() {
+                    self.create_script();
+                    ui.close_menu();
+                }
+                if ui.button("Scene").clicked() {
+                    self.create_scene();
                     ui.close_menu();
                 }
             });
@@ -283,7 +380,7 @@ impl ContentBrowser {
         self.refresh();
     }
 
-    fn refresh(&mut self) {
+    pub fn refresh(&mut self) {
         if !self.current.is_dir() {
             self.current = self.root.clone();
         }
@@ -294,6 +391,21 @@ impl ContentBrowser {
     fn create_folder(&mut self) {
         let path = unique_path(&self.current, "New Folder", None);
         if fs::create_dir(&path).is_ok() {
+            self.refresh();
+            self.start_rename(path);
+        }
+    }
+
+    fn create_scene(&mut self) {
+        if let Ok(path) = storage::create_scene_file(&self.current) {
+            self.refresh();
+            self.start_rename(path);
+        }
+    }
+
+    // new scripts start empty and go straight into rename mode
+    fn create_script(&mut self) {
+        if let Ok(path) = storage::save_script(&ScriptGraph::empty(), "New Script", &self.current) {
             self.refresh();
             self.start_rename(path);
         }
@@ -509,7 +621,7 @@ fn draw_entry(
             .unwrap_or(icon.size());
         image.paint_at(ui, Rect::from_center_size(icon.center(), fitted));
     } else {
-        painter.rect_filled(icon, 4.0, Color32::from_rgb(90, 96, 108));
+        painter.rect_filled(icon, 4.0, tile_color(&entry.path));
 
         let extension = Path::new(&entry.name)
             .extension()
@@ -569,6 +681,18 @@ fn draw_entry(
     }
 
     (response, outcome)
+}
+
+fn tile_color(path: &Path) -> Color32 {
+    if is_prefab(path) {
+        Color32::from_rgb(140, 95, 210)
+    } else if is_vscript(path) {
+        Color32::from_rgb(70, 160, 105)
+    } else if is_scene(path) {
+        Color32::from_rgb(60, 150, 190)
+    } else {
+        Color32::from_rgb(90, 96, 108)
+    }
 }
 
 fn build_root(root: &Path) -> FolderNode {

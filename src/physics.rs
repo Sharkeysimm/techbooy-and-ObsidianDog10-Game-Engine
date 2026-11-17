@@ -28,6 +28,9 @@ struct Spec {
     shape: SpecShape,
     gravity: i32,
     lock_rotation: bool,
+    freeze_x: bool,
+    freeze_y: bool,
+    trigger: bool,
     bounciness: i32,
 }
 
@@ -60,6 +63,11 @@ impl PhysicsSystem {
     }
 
     pub fn step(&mut self, scene: &mut Scene) {
+        // kicks are speed changes queued by scripts
+        let kicks: Vec<(u64, eframe::egui::Vec2)> = scene.kicks.drain(..).collect();
+        let velocity_sets: Vec<(u64, Option<f32>, Option<f32>)> =
+            scene.velocity_sets.drain(..).collect();
+
         let items = collect(scene);
         let specs: Vec<Spec> = items.iter().map(|i| i.spec.clone()).collect();
 
@@ -70,6 +78,47 @@ impl PhysicsSystem {
 
         if items.is_empty() {
             return;
+        }
+
+        // anything moved from outside the simulation gets teleported
+        for (id, handle) in &self.dynamic {
+            let target = scene.world_affine(*id).position();
+            if let Some(body) = self.world.bodies.get_mut(*handle) {
+                let current = body.translation();
+                if (current.x - target.x).abs() > 0.01 || (current.y - target.y).abs() > 0.01 {
+                    body.set_translation(Vector::new(target.x, target.y), true);
+                }
+            }
+        }
+
+        // an impulse scaled by mass gives the same speed change for any size
+        for (id, velocity) in kicks {
+            let Some(entry) = self.dynamic.iter().find(|entry| entry.0 == id) else {
+                continue;
+            };
+            let handle = entry.1;
+
+            if let Some(body) = self.world.bodies.get_mut(handle) {
+                let mass = body.mass();
+                body.apply_impulse(Vector::new(velocity.x * mass, velocity.y * mass), true);
+            }
+        }
+
+        // scripts can overwrite one axis of the speed and keep the other
+        for (id, x, y) in velocity_sets {
+            let Some(entry) = self.dynamic.iter().find(|entry| entry.0 == id) else {
+                continue;
+            };
+            let handle = entry.1;
+
+            if let Some(body) = self.world.bodies.get_mut(handle) {
+                let current = body.linvel();
+                let (current_x, current_y) = (current.x, current.y);
+                body.set_linvel(
+                    Vector::new(x.unwrap_or(current_x), y.unwrap_or(current_y)),
+                    true,
+                );
+            }
         }
 
         self.world.step();
@@ -98,6 +147,9 @@ impl PhysicsSystem {
             if item.spec.lock_rotation {
                 body = body.lock_rotations();
             }
+            if item.spec.freeze_x || item.spec.freeze_y {
+                body = body.enabled_translations(!item.spec.freeze_x, !item.spec.freeze_y);
+            }
             let body = body
                 .translation(Vector::new(
                     item.collider.position.x,
@@ -121,7 +173,8 @@ impl PhysicsSystem {
                         .unwrap_or_else(|| ColliderBuilder::ball(1.0))
                 }
             }
-            .restitution(item.bounciness);
+            .restitution(item.bounciness)
+            .sensor(item.spec.trigger);
 
             let (handle, _) = self.world.insert(body, collider);
 
@@ -152,15 +205,20 @@ fn collect(scene: &Scene) -> Vec<Item> {
             let own = object.collider?;
             let collider = scene.world_collider(object.id)?;
 
-            let (kind, gravity_scale, lock_rotation) = match object.rigidbody {
-                None => (Kind::Static, 0.0, false),
+            let (kind, gravity_scale, lock_rotation, freeze) = match object.rigidbody {
+                None => (Kind::Static, 0.0, false, (false, false)),
                 Some(rb) => {
                     let kind = match rb.body {
                         BodyType::Dynamic => Kind::Dynamic,
                         BodyType::Kinematic => Kind::Kinematic,
                         BodyType::Fixed => Kind::Static,
                     };
-                    (kind, rb.gravity_scale, rb.lock_rotation)
+                    (
+                        kind,
+                        rb.gravity_scale,
+                        rb.lock_rotation,
+                        (rb.freeze_x, rb.freeze_y),
+                    )
                 }
             };
 
@@ -188,6 +246,9 @@ fn collect(scene: &Scene) -> Vec<Item> {
                     shape,
                     gravity: quantise(gravity_scale),
                     lock_rotation,
+                    freeze_x: freeze.0,
+                    freeze_y: freeze.1,
+                    trigger: own.is_trigger,
                     bounciness: quantise(own.bounciness),
                 },
                 collider,

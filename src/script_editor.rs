@@ -621,6 +621,24 @@ fn params(ui: &mut egui::Ui, salt: Id, kind: &mut NodeKind, capture: &mut KeyCap
                     }
                 });
         }
+        NodeKind::LoadScene { scene } => {
+            let shown = Path::new(scene.as_str())
+                .file_stem()
+                .map(|s| s.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "pick a scene".to_string());
+
+            egui::ComboBox::from_id_salt(salt.with("scene"))
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    for path in storage::list_scenes() {
+                        let label = Path::new(&path)
+                            .file_stem()
+                            .map(|s| s.to_string_lossy().into_owned())
+                            .unwrap_or_else(|| path.clone());
+                        ui.selectable_value(scene, path.clone(), label);
+                    }
+                });
+        }
         NodeKind::OnStart
         | NodeKind::EveryFrame
         | NodeKind::Destroy

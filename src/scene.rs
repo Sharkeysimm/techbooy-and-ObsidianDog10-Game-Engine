@@ -19,6 +19,10 @@ pub struct WorldCollider {
 pub struct Scene {
     pub objects: Vec<GameObject>,
     pub selected: Option<u64>,
+    pub log: Vec<String>,
+    pub kicks: Vec<(u64, Vec2)>,
+    pub velocity_sets: Vec<(u64, Option<f32>, Option<f32>)>,
+    pub pending_scene: Option<String>,
     next_id: u64,
 }
 
@@ -27,6 +31,10 @@ impl Scene {
         let mut scene = Self {
             objects: Vec::new(),
             selected: None,
+            log: Vec::new(),
+            kicks: Vec::new(),
+            velocity_sets: Vec::new(),
+            pending_scene: None,
             next_id: 1,
         };
         let mut camera = GameObject::camera();
@@ -38,6 +46,40 @@ impl Scene {
         scene
     }
 
+    // a fresh scene holding only a camera
+    pub fn blank() -> Self {
+        let mut scene = Self::from_parts(Vec::new(), 1);
+        let mut camera = GameObject::camera();
+        camera.name = "Main Camera".into();
+        scene.add(camera);
+        scene
+    }
+
+    pub fn from_parts(objects: Vec<GameObject>, next_id: u64) -> Self {
+        let floor = objects.iter().map(|o| o.id + 1).max().unwrap_or(1);
+
+        Self {
+            objects,
+            selected: None,
+            log: Vec::new(),
+            kicks: Vec::new(),
+            velocity_sets: Vec::new(),
+            pending_scene: None,
+            next_id: next_id.max(floor),
+        }
+    }
+
+    pub fn next_id(&self) -> u64 {
+        self.next_id
+    }
+
+    // puts the objects back and keeps the id counter from handing out old ids
+    pub fn restore(&mut self, objects: Vec<GameObject>, next_id: u64) {
+        let floor = objects.iter().map(|o| o.id + 1).max().unwrap_or(1);
+        self.objects = objects;
+        self.next_id = next_id.max(floor);
+    }
+
     pub fn add(&mut self, mut object: GameObject) -> u64 {
         object.id = self.next_id;
         self.next_id += 1;
@@ -45,6 +87,14 @@ impl Scene {
         let id = object.id;
         self.objects.push(object);
         id
+    }
+
+    pub fn log(&mut self, message: String) {
+        println!("{message}");
+        self.log.push(message);
+        if self.log.len() > 200 {
+            self.log.remove(0);
+        }
     }
 
     pub fn get(&self, id: u64) -> Option<&GameObject> {
