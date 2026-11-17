@@ -2,9 +2,9 @@ use eframe::egui::{self, Align, Align2, Layout, Sense};
 
 use std::path::PathBuf;
 
-use crate::assets::{is_prefab, is_vscript};
+use crate::assets::{is_prefab, is_text_script, is_vscript};
 use crate::drag::{AssetPayload, ObjectPayload};
-use crate::game_object::{GameObject, Shape};
+use crate::game_object::{GameObject, Shape, TextScript};
 use crate::scene::Scene;
 use crate::storage;
 
@@ -108,7 +108,12 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut HierarchyState) 
         scene.remove(id);
     }
     if let Some((path, id)) = actions.attach_script {
-        if let Some(graph) = storage::load_script(&path) {
+        if is_text_script(&path) {
+            if let Some(object) = scene.get_mut(id) {
+                object.text_script = Some(TextScript::new(&path));
+            }
+            scene.selected = Some(id);
+        } else if let Some(graph) = storage::load_script(&path) {
             if let Some(object) = scene.get_mut(id) {
                 object.script = Some(graph);
             }
@@ -245,7 +250,9 @@ fn row(
         .is_some_and(|p| p.id != object.id)
         || response
             .dnd_hover_payload::<AssetPayload>()
-            .is_some_and(|p| is_prefab(&p.path) || is_vscript(&p.path));
+            .is_some_and(|p| {
+                is_prefab(&p.path) || is_vscript(&p.path) || is_text_script(&p.path)
+            });
 
     let visuals = ui.visuals();
     if drop_target {
@@ -293,7 +300,7 @@ fn row(
     if let Some(payload) = response.dnd_release_payload::<AssetPayload>() {
         if is_prefab(&payload.path) {
             actions.instantiate = Some((payload.path.clone(), Some(object.id)));
-        } else if is_vscript(&payload.path) {
+        } else if is_vscript(&payload.path) || is_text_script(&payload.path) {
             actions.attach_script = Some((payload.path.clone(), object.id));
         }
     }

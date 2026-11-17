@@ -1,10 +1,11 @@
 use eframe::egui::{self, Align, Align2, Color32, FontId, Layout, Sense};
+use std::path::{Path, PathBuf};
 
-use crate::assets::{image_uri, is_image, is_vscript};
+use crate::assets::{image_uri, is_image, is_text_script, is_vscript};
 use crate::drag::AssetPayload;
 use crate::game_object::{
     BodyType, Camera2D, Collider2D, ColliderShape, GameObject, Rigidbody2D, Shape, ShapeRenderer,
-    SpriteRenderer, TextureFilter,
+    SpriteRenderer, TextScript, TextureFilter,
 };
 use crate::scene::Scene;
 use crate::script::ScriptGraph;
@@ -14,6 +15,8 @@ use crate::viewport::ViewMode;
 const COLLIDER_NAMES: [&str; 4] = ["Box", "Circle", "Capsule", "Polygon"];
 
 pub fn show(ctx: &egui::Context, scene: &mut Scene, mode: &mut ViewMode) {
+    let mut open_text: Option<PathBuf> = None;
+
     egui::SidePanel::right("inspector")
         .resizable(true)
         .default_width(280.0)
@@ -45,9 +48,13 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, mode: &mut ViewMode) {
                 ));
                 ui.separator();
 
-                components(ui, object, mode);
+                components(ui, object, mode, &mut open_text);
             });
         });
+
+    if open_text.is_some() {
+        scene.open_text = open_text;
+    }
 }
 
 fn collider_kind(shape: &ColliderShape) -> usize {
@@ -68,7 +75,12 @@ fn default_collider(kind: usize) -> ColliderShape {
     }
 }
 
-fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
+fn components(
+    ui: &mut egui::Ui,
+    object: &mut GameObject,
+    mode: &mut ViewMode,
+    open_text: &mut Option<PathBuf>,
+) {
     let id = object.id;
     let mut remove_shape = false;
     let mut remove_sprite = false;
@@ -76,6 +88,7 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
     let mut remove_body = false;
     let mut remove_collider = false;
     let mut remove_script = false;
+    let mut remove_text_script = false;
 
     component(ui, ("transform", id), "Transform", false, |ui| {
         let t = &mut object.transform;
@@ -263,6 +276,38 @@ fn components(ui: &mut egui::Ui, object: &mut GameObject, mode: &mut ViewMode) {
         });
     }
 
+    if let Some(script) = object.text_script.as_mut() {
+        let mut open = false;
+
+        remove_text_script = component(ui, ("text_script", id), "Script", true, |ui| {
+            let shown = Path::new(&script.path)
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_else(|| "none".to_string());
+
+            egui::ComboBox::from_label("File")
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    for path in storage::list_text_scripts() {
+                        let label = path.rsplit('/').next().unwrap_or(&path).to_string();
+                        ui.selectable_value(&mut script.path, path.clone(), label);
+                    }
+                });
+
+            if !script.path.is_empty() && ui.button("Open in Code Editor").clicked() {
+                open = true;
+            }
+            ui.weak("Sprocket has no script language yet, so this is not run.");
+        });
+
+        if open {
+            *open_text = Some(PathBuf::from(&script.path));
+        }
+    }
+
+    if remove_text_script {
+        object.text_script = None;
+    }
     if remove_script {
         object.script = None;
     }
@@ -355,6 +400,15 @@ fn add_component_menu(ui: &mut egui::Ui, object: &mut GameObject) {
 
         ui.menu_button("Scripting", |ui| {
             if ui
+                .add_enabled(object.text_script.is_none(), egui::Button::new("Script"))
+                .clicked()
+            {
+                object.text_script = Some(TextScript {
+                    path: String::new(),
+                });
+                ui.close_menu();
+            }
+            if ui
                 .add_enabled(object.script.is_none(), egui::Button::new("Visual Script"))
                 .clicked()
             {
@@ -373,7 +427,9 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
 
     let hovering = response
         .dnd_hover_payload::<AssetPayload>()
-        .is_some_and(|p| is_image(&p.path) || is_vscript(&p.path));
+        .is_some_and(|p| {
+            is_image(&p.path) || is_vscript(&p.path) || is_text_script(&p.path)
+        });
     let fill = if hovering {
         Color32::from_rgba_unmultiplied(70, 130, 220, 70)
     } else {
@@ -401,6 +457,8 @@ fn sprite_drop_zone(ui: &mut egui::Ui, object: &mut GameObject) {
             if let Some(graph) = storage::load_script(&payload.path) {
                 object.script = Some(graph);
             }
+        } else if is_text_script(&payload.path) {
+            object.text_script = Some(TextScript::new(&payload.path));
         }
     }
 }

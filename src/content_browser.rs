@@ -5,7 +5,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::assets::{image_uri, is_image, is_prefab, is_scene, is_vscript};
+use crate::assets::{image_uri, is_image, is_prefab, is_scene, is_text_script, is_vscript};
 use crate::drag::{AssetPayload, ObjectPayload};
 use crate::script::ScriptGraph;
 use crate::storage;
@@ -44,6 +44,7 @@ pub struct ContentBrowser {
     prefab_request: Option<u64>,
     script_open_request: Option<PathBuf>,
     scene_open_request: Option<PathBuf>,
+    code_open_request: Option<PathBuf>,
     renaming: Option<Rename>,
     search: String,
     icon_size: f32,
@@ -66,6 +67,7 @@ impl ContentBrowser {
             prefab_request: None,
             script_open_request: None,
             scene_open_request: None,
+            code_open_request: None,
             renaming: None,
             search: String::new(),
             icon_size: 72.0,
@@ -78,6 +80,10 @@ impl ContentBrowser {
 
     pub fn current_dir(&self) -> &Path {
         &self.current
+    }
+
+    pub fn take_code_open_request(&mut self) -> Option<PathBuf> {
+        self.code_open_request.take()
     }
 
     pub fn take_scene_open_request(&mut self) -> Option<PathBuf> {
@@ -123,6 +129,8 @@ impl ContentBrowser {
                 let mut new_script = false;
                 let mut open_script: Option<PathBuf> = None;
                 let mut open_scene: Option<PathBuf> = None;
+                let mut open_code: Option<PathBuf> = None;
+                let mut new_text_script = false;
                 let mut new_scene = false;
                 let mut refresh = false;
                 let mut prefab_drop: Option<u64> = None;
@@ -143,6 +151,10 @@ impl ContentBrowser {
                     background.context_menu(|ui| {
                         if ui.button("New Folder").clicked() {
                             new_folder = true;
+                            ui.close_menu();
+                        }
+                        if ui.button("New Script").clicked() {
+                            new_text_script = true;
                             ui.close_menu();
                         }
                         if ui.button("New Visual Script").clicked() {
@@ -210,6 +222,7 @@ impl ContentBrowser {
                                     if is_image(&entry.path)
                                         || is_prefab(&entry.path)
                                         || is_vscript(&entry.path)
+                                        || is_text_script(&entry.path)
                                     {
                                         response.dnd_set_drag_payload(AssetPayload {
                                             path: entry.path.clone(),
@@ -222,18 +235,23 @@ impl ContentBrowser {
                                             open_script = Some(entry.path.clone());
                                         } else if is_scene(&entry.path) {
                                             open_scene = Some(entry.path.clone());
+                                        } else if is_text_script(&entry.path) {
+                                            open_code = Some(entry.path.clone());
                                         }
                                     }
 
                                     response.context_menu(|ui| {
                                         let openable = entry.is_dir
                                             || is_vscript(&entry.path)
-                                            || is_scene(&entry.path);
+                                            || is_scene(&entry.path)
+                                            || is_text_script(&entry.path);
                                         if openable && ui.button("Open").clicked() {
                                             if entry.is_dir {
                                                 navigate = Some(entry.path.clone());
                                             } else if is_scene(&entry.path) {
                                                 open_scene = Some(entry.path.clone());
+                                            } else if is_text_script(&entry.path) {
+                                                open_code = Some(entry.path.clone());
                                             } else {
                                                 open_script = Some(entry.path.clone());
                                             }
@@ -279,6 +297,12 @@ impl ContentBrowser {
                 if open_scene.is_some() {
                     self.scene_open_request = open_scene;
                 }
+                if open_code.is_some() {
+                    self.code_open_request = open_code;
+                }
+                if new_text_script {
+                    self.create_text_script();
+                }
                 if new_scene {
                     self.create_scene();
                 }
@@ -317,6 +341,10 @@ impl ContentBrowser {
             ui.menu_button("Create", |ui| {
                 if ui.button("Folder").clicked() {
                     self.create_folder();
+                    ui.close_menu();
+                }
+                if ui.button("Script").clicked() {
+                    self.create_text_script();
                     ui.close_menu();
                 }
                 if ui.button("Visual Script").clicked() {
@@ -391,6 +419,13 @@ impl ContentBrowser {
     fn create_folder(&mut self) {
         let path = unique_path(&self.current, "New Folder", None);
         if fs::create_dir(&path).is_ok() {
+            self.refresh();
+            self.start_rename(path);
+        }
+    }
+
+    fn create_text_script(&mut self) {
+        if let Ok(path) = storage::create_text_script(&self.current) {
             self.refresh();
             self.start_rename(path);
         }
@@ -597,7 +632,7 @@ fn draw_entry(
     let painter = ui.painter().clone();
 
     if selected {
-        painter.rect_filled(rect, 4.0, Color32::from_rgba_unmultiplied(70, 130, 220, 90));
+        painter.rect_filled(rect, 4.0, Color32::from_rgba_unmultiplied(232, 126, 38, 90));
     } else if response.hovered() {
         painter.rect_filled(rect, 4.0, Color32::from_white_alpha(14));
     }
@@ -690,6 +725,8 @@ fn tile_color(path: &Path) -> Color32 {
         Color32::from_rgb(70, 160, 105)
     } else if is_scene(path) {
         Color32::from_rgb(60, 150, 190)
+    } else if is_text_script(path) {
+        Color32::from_rgb(214, 120, 60)
     } else {
         Color32::from_rgb(90, 96, 108)
     }

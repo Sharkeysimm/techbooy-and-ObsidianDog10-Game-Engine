@@ -1,4 +1,5 @@
 mod assets;
+mod code_editor;
 mod collision;
 mod content_browser;
 mod drag;
@@ -14,6 +15,7 @@ mod script;
 mod script_editor;
 mod serde_util;
 mod storage;
+mod theme;
 mod view;
 mod viewport;
 
@@ -24,12 +26,13 @@ fn main() -> eframe::Result {
 
     let options = eframe::NativeOptions {
         viewport: eframe::egui::ViewportBuilder::default()
+            .with_title("Sprocket")
             .with_inner_size([1280.0, 800.0])
             .with_maximized(true),
         ..Default::default()
     };
 
-    eframe::run_simple_native("Engine", options, move |ctx, _frame| {
+    eframe::run_simple_native("Sprocket", options, move |ctx, _frame| {
         editor.ui(ctx);
     })
 }

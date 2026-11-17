@@ -2,6 +2,9 @@ use std::path::Path;
 
 pub const ROOT: &str = "assets";
 
+// extension for text scripts and the one place to change it
+pub const TEXT_SCRIPT_EXT: &str = "spt";
+
 fn extension(path: &Path) -> String {
     path.extension()
         .map(|e| e.to_string_lossy().to_lowercase())
@@ -14,6 +17,10 @@ pub fn is_image(path: &Path) -> bool {
 
 pub fn is_prefab(path: &Path) -> bool {
     extension(path) == "prefab"
+}
+
+pub fn is_text_script(path: &Path) -> bool {
+    extension(path) == TEXT_SCRIPT_EXT
 }
 
 pub fn is_scene(path: &Path) -> bool {

@@ -4,8 +4,10 @@ use eframe::egui::{
 };
 use std::path::PathBuf;
 
-use crate::assets::{image_uri, is_image, is_prefab, is_vscript};
+use crate::assets::{image_uri, is_image, is_prefab, is_text_script, is_vscript};
+use crate::code_editor::CodeEditor;
 use crate::drag::AssetPayload;
+use crate::game_object::TextScript;
 use crate::game_object::{GameObject, Shape, SpriteRenderer, TextureFilter, BASE};
 use crate::gizmo::{Gizmo, Snap, Tool};
 use crate::math::{capsule_outline, point_in_polygon, regular_polygon, rotate, Affine};
@@ -21,6 +23,7 @@ pub enum ViewMode {
     Game,
     Both,
     Script,
+    Code,
 }
 
 struct SceneCamera {
@@ -37,12 +40,21 @@ pub struct ViewportState {
     camera: SceneCamera,
     gizmo: Gizmo,
     script_editor: ScriptEditor,
+    code_editor: CodeEditor,
     game_aspect: f32,
 }
 
 impl ViewportState {
     pub fn capturing_key(&self) -> bool {
         self.script_editor.capturing()
+    }
+
+    pub fn open_code_file(&mut self, path: PathBuf) -> bool {
+        let opened = self.code_editor.open(path);
+        if opened {
+            self.mode = ViewMode::Code;
+        }
+        opened
     }
 
     pub fn open_script_asset(&mut self, path: PathBuf, graph: ScriptGraph) {
@@ -67,6 +79,7 @@ impl ViewportState {
             },
             gizmo: Gizmo::new(),
             script_editor: ScriptEditor::default(),
+            code_editor: CodeEditor::default(),
             game_aspect: 16.0 / 9.0,
         }
     }
@@ -85,6 +98,7 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut ViewportState, p
             ui.selectable_value(&mut state.mode, ViewMode::Game, "Game");
             ui.selectable_value(&mut state.mode, ViewMode::Both, "Both");
             ui.selectable_value(&mut state.mode, ViewMode::Script, "Script");
+            ui.selectable_value(&mut state.mode, ViewMode::Code, "Code");
         });
         ui.separator();
 
@@ -92,6 +106,7 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut ViewportState, p
             ViewMode::Scene => scene_view(ui, scene, state, playing, &mut spawn),
             ViewMode::Game => game_view(ui, scene, state),
             ViewMode::Script => script_editor::show(ui, scene, &mut state.script_editor),
+            ViewMode::Code => state.code_editor.show(ui),
             ViewMode::Both => {
                 ui.columns(2, |columns| {
                     scene_view(&mut columns[0], scene, state, playing, &mut spawn);
@@ -194,7 +209,12 @@ fn scene_view(
 
     let hovering_image = response
         .dnd_hover_payload::<AssetPayload>()
-        .is_some_and(|p| is_image(&p.path) || is_prefab(&p.path) || is_vscript(&p.path));
+        .is_some_and(|p| {
+            is_image(&p.path)
+                || is_prefab(&p.path)
+                || is_vscript(&p.path)
+                || is_text_script(&p.path)
+        });
     if hovering_image {
         painter.rect_filled(rect, 0.0, Color32::from_rgba_unmultiplied(70, 130, 220, 40));
     }
@@ -215,6 +235,14 @@ fn scene_view(
                     }
                     scene.selected = Some(id);
                 }
+            }
+        }
+        if let (true, Some(pointer)) = (is_text_script(&payload.path), pointer) {
+            if let Some(id) = pick(scene, &view, pointer) {
+                if let Some(object) = scene.get_mut(id) {
+                    object.text_script = Some(TextScript::new(&payload.path));
+                }
+                scene.selected = Some(id);
             }
         }
     }

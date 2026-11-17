@@ -11,7 +11,8 @@ use crate::physics::PhysicsSystem;
 use crate::scene::Scene;
 use crate::storage;
 use crate::script::ScriptRuntime;
-use crate::viewport::ViewportState;
+use crate::theme;
+use crate::viewport::{ViewMode, ViewportState};
 use crate::{drag, hierarchy, inspector, viewport};
 
 enum SceneAction {
@@ -30,6 +31,8 @@ pub struct Editor {
     scene_path: Option<PathBuf>,
     saved_json: String,
     pending_action: Option<SceneAction>,
+    themed: bool,
+    show_about: bool,
     last_frame: Instant,
     physics_accumulator: f32,
     is_playing: bool,
@@ -51,6 +54,8 @@ impl Editor {
             scene_path: None,
             saved_json,
             pending_action: None,
+            themed: false,
+            show_about: false,
             last_frame: Instant::now(),
             physics_accumulator: 0.0,
             is_playing: false,
@@ -191,7 +196,13 @@ impl Editor {
     }
 
     fn shortcuts(&mut self, ctx: &egui::Context) {
-        if self.is_playing || self.viewport.capturing_key() || ctx.wants_keyboard_input() {
+        // only the scene and game views use these keys
+        let in_view = matches!(self.viewport.mode, ViewMode::Scene | ViewMode::Both);
+        if !in_view
+            || self.is_playing
+            || self.viewport.capturing_key()
+            || ctx.wants_keyboard_input()
+        {
             return;
         }
 
@@ -252,13 +263,49 @@ impl Editor {
         self.browser.refresh();
     }
 
+    fn about_window(&mut self, ctx: &egui::Context) {
+        let mut open = self.show_about;
+
+        egui::Window::new("About Sprocket")
+            .open(&mut open)
+            .collapsible(false)
+            .resizable(false)
+            .anchor(egui::Align2::CENTER_CENTER, [0.0, 0.0])
+            .show(ctx, |ui| {
+                ui.label(
+                    egui::RichText::new("Sprocket")
+                        .size(22.0)
+                        .strong()
+                        .color(theme::ACCENT),
+                );
+                ui.label(format!("Version {}", env!("CARGO_PKG_VERSION")));
+                ui.label("A small 2D game engine written in Rust.");
+            });
+
+        self.show_about = open;
+    }
+
+    fn open_code(&mut self, path: PathBuf) {
+        if !self.viewport.open_code_file(path.clone()) {
+            self.scene
+                .log(format!("could not open {}", path.display()));
+        }
+    }
+
     pub fn ui(&mut self, ctx: &egui::Context) {
+        if !self.themed {
+            theme::apply(ctx);
+            self.themed = true;
+        }
+
         if ctx.input(|i| i.key_pressed(Key::F11)) {
             let fullscreen = ctx.input(|i| i.viewport().fullscreen.unwrap_or(false));
             ctx.send_viewport_cmd(egui::ViewportCommand::Fullscreen(!fullscreen));
         }
 
-        if ctx.input(|i| i.modifiers.command && i.key_pressed(Key::S)) {
+        // the code editor uses its own ctrl s for the open file
+        let code_open = self.viewport.mode == ViewMode::Code;
+        if !code_open && ctx.input(|i| i.modifiers.command && i.key_pressed(Key::S)) {
             self.save_scene();
         }
 
@@ -266,6 +313,9 @@ impl Editor {
 
         egui::TopBottomPanel::top("toolbar").show(ctx, |ui| {
             ui.horizontal(|ui| {
+                ui.label(egui::RichText::new("SPROCKET").strong().color(theme::ACCENT));
+                ui.separator();
+
                 ui.menu_button("File", |ui| {
                     ui.add_enabled_ui(!self.is_playing, |ui| {
                         if ui.button("New Scene").clicked() {
@@ -282,6 +332,12 @@ impl Editor {
                             ui.close_menu();
                         }
                     });
+                });
+                ui.menu_button("Help", |ui| {
+                    if ui.button("About Sprocket").clicked() {
+                        self.show_about = true;
+                        ui.close_menu();
+                    }
                 });
                 ui.label(self.scene_name());
                 ui.separator();
@@ -319,6 +375,13 @@ impl Editor {
         });
 
         self.browser.show(ctx);
+        if let Some(path) = self.browser.take_code_open_request() {
+            self.open_code(path);
+        }
+        if let Some(path) = self.scene.open_text.take() {
+            self.open_code(path);
+        }
+        self.about_window(ctx);
         if let Some(path) = self.browser.take_scene_open_request() {
             self.request_scene(SceneAction::Open(path));
         }

@@ -5,7 +5,7 @@ use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
 
-use crate::assets::{is_image, is_prefab, is_scene, ROOT};
+use crate::assets::{is_image, is_prefab, is_scene, is_text_script, ROOT, TEXT_SCRIPT_EXT};
 use crate::game_object::{GameObject, Transform};
 use crate::scene::Scene;
 use crate::script::ScriptGraph;
@@ -166,6 +166,17 @@ pub fn load_scene(path: &Path) -> Option<Scene> {
     let text = fs::read_to_string(path).ok()?;
     let file: SceneFile = serde_json::from_str(&text).ok()?;
     Some(Scene::from_parts(file.objects, file.next_id))
+}
+
+// text scripts start empty because the language is not decided yet
+pub fn create_text_script(dir: &Path) -> io::Result<PathBuf> {
+    let path = unique_path(dir, "New Script", TEXT_SCRIPT_EXT);
+    fs::write(&path, "")?;
+    Ok(path)
+}
+
+pub fn list_text_scripts() -> Vec<String> {
+    list_matching(is_text_script)
 }
 
 pub fn list_scenes() -> Vec<String> {

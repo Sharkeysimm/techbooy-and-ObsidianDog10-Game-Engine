@@ -1,5 +1,6 @@
 use eframe::egui::Color32;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 
 use crate::script::ScriptGraph;
 
@@ -84,6 +85,20 @@ pub struct SpriteRenderer {
     pub filter: TextureFilter,
     #[serde(with = "crate::serde_util::color")]
     pub tint: Color32,
+}
+
+// points at a text script file and nothing runs it yet
+#[derive(Clone, Serialize, Deserialize)]
+pub struct TextScript {
+    pub path: String,
+}
+
+impl TextScript {
+    pub fn new(path: &Path) -> Self {
+        Self {
+            path: path.to_string_lossy().replace('\\', "/"),
+        }
+    }
 }
 
 #[derive(Clone, Copy, Serialize, Deserialize)]
@@ -194,6 +209,8 @@ pub struct GameObject {
     pub rigidbody: Option<Rigidbody2D>,
     pub collider: Option<Collider2D>,
     pub script: Option<ScriptGraph>,
+    #[serde(default)]
+    pub text_script: Option<TextScript>,
 }
 
 impl GameObject {
@@ -210,6 +227,7 @@ impl GameObject {
             rigidbody: None,
             collider: None,
             script: None,
+            text_script: None,
         }
     }
 

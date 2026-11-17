@@ -1,4 +1,5 @@
 use eframe::egui::Vec2;
+use std::path::PathBuf;
 
 use crate::game_object::{Camera2D, ColliderShape, GameObject, Shape, Transform, BASE};
 use crate::math::{regular_polygon, Affine};
@@ -23,6 +24,7 @@ pub struct Scene {
     pub kicks: Vec<(u64, Vec2)>,
     pub velocity_sets: Vec<(u64, Option<f32>, Option<f32>)>,
     pub pending_scene: Option<String>,
+    pub open_text: Option<PathBuf>,
     next_id: u64,
 }
 
@@ -35,6 +37,7 @@ impl Scene {
             kicks: Vec::new(),
             velocity_sets: Vec::new(),
             pending_scene: None,
+            open_text: None,
             next_id: 1,
         };
         let mut camera = GameObject::camera();
@@ -65,6 +68,7 @@ impl Scene {
             kicks: Vec::new(),
             velocity_sets: Vec::new(),
             pending_scene: None,
+            open_text: None,
             next_id: next_id.max(floor),
         }
     }
