@@ -25,6 +25,9 @@ pub struct Scene {
     pub velocity_sets: Vec<(u64, Option<f32>, Option<f32>)>,
     pub pending_scene: Option<String>,
     pub open_text: Option<PathBuf>,
+    pub mouse_world: Option<Vec2>,
+    pub mouse_in_view: bool,
+    pub angvel_sets: Vec<(u64, f32)>,
     next_id: u64,
 }
 
@@ -38,6 +41,9 @@ impl Scene {
             velocity_sets: Vec::new(),
             pending_scene: None,
             open_text: None,
+            mouse_world: None,
+            mouse_in_view: false,
+            angvel_sets: Vec::new(),
             next_id: 1,
         };
         let mut camera = GameObject::camera();
@@ -69,6 +75,9 @@ impl Scene {
             velocity_sets: Vec::new(),
             pending_scene: None,
             open_text: None,
+            mouse_world: None,
+            mouse_in_view: false,
+            angvel_sets: Vec::new(),
             next_id: next_id.max(floor),
         }
     }
@@ -172,6 +181,15 @@ impl Scene {
             object.transform.y = local.y;
             object.transform.rotation = rotation;
         }
+    }
+
+    // world position of the hinge anchor
+    pub fn hinge_pivot(&self, id: u64) -> Option<Vec2> {
+        let hinge = self.get(id)?.hinge?;
+        Some(
+            self.world_affine(id)
+                .apply(Vec2::new(hinge.anchor_x * BASE, hinge.anchor_y * BASE)),
+        )
     }
 
     pub fn world_collider(&self, id: u64) -> Option<WorldCollider> {

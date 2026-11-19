@@ -88,6 +88,9 @@ impl ViewportState {
 pub fn show(ctx: &egui::Context, scene: &mut Scene, state: &mut ViewportState, playing: bool) {
     let mut spawn: Option<(PathBuf, Vec2)> = None;
 
+    // the views set these again when the pointer is over them
+    scene.mouse_in_view = false;
+
     if state.mode != ViewMode::Script {
         state.script_editor.stop_capture();
     }
@@ -151,6 +154,13 @@ fn scene_view(
     camera_input(ui, &response, rect, &mut state.camera);
     let view = View::new(rect.center(), state.camera.center, state.camera.zoom);
 
+    if let Some(pointer) = ui.input(|i| i.pointer.latest_pos()) {
+        if rect.contains(pointer) {
+            scene.mouse_world = Some(view.to_world(pointer));
+            scene.mouse_in_view = true;
+        }
+    }
+
     painter.rect_filled(rect, 0.0, Color32::from_rgb(30, 30, 34));
     if state.show_grid {
         draw_grid(&painter, rect, &view, state.snap.move_step);
@@ -166,6 +176,7 @@ fn scene_view(
         for id in scene.draw_order() {
             if scene.is_visible(id) {
                 draw_collider(&painter, scene, id, &view);
+                draw_hinge(&painter, scene, id, &view);
             }
         }
     }
@@ -256,7 +267,7 @@ fn scene_view(
     );
 }
 
-fn game_view(ui: &mut egui::Ui, scene: &Scene, state: &mut ViewportState) {
+fn game_view(ui: &mut egui::Ui, scene: &mut Scene, state: &mut ViewportState) {
     let (response, painter) = ui.allocate_painter(ui.available_size(), Sense::hover());
     let rect = response.rect;
     state.game_aspect = (rect.width() / rect.height().max(1.0)).max(0.1);
@@ -278,6 +289,13 @@ fn game_view(ui: &mut egui::Ui, scene: &Scene, state: &mut ViewportState) {
     // camera size is half the visible height in units
     let zoom = rect.height() / (2.0 * camera.size.max(0.01) * BASE);
     let view = View::new(rect.center(), position, zoom);
+
+    if let Some(pointer) = ui.input(|i| i.pointer.latest_pos()) {
+        if rect.contains(pointer) {
+            scene.mouse_world = Some(view.to_world(pointer));
+            scene.mouse_in_view = true;
+        }
+    }
 
     for id in scene.draw_order() {
         draw_object(ui, &painter, scene, id, &view, false);
@@ -512,6 +530,26 @@ fn draw_camera_frames(painter: &Painter, scene: &Scene, view: &View, aspect: f32
             points,
             Stroke::new(1.0_f32, Color32::from_white_alpha(110)),
         ));
+    }
+}
+
+// ring on the pivot and a line to the body it is joined to
+fn draw_hinge(painter: &Painter, scene: &Scene, id: u64, view: &View) {
+    let Some(pivot) = scene.hinge_pivot(id) else {
+        return;
+    };
+    let color = Color32::from_rgb(255, 160, 60);
+    let center = view.to_screen(pivot);
+
+    painter.circle_stroke(center, 7.0, Stroke::new(2.0_f32, color));
+    painter.circle_filled(center, 2.5, color);
+
+    let connected = scene.get(id).and_then(|o| o.hinge).and_then(|h| h.connected);
+    if let Some(other) = connected {
+        if scene.get(other).is_some() {
+            let target = view.to_screen(scene.world_affine(other).position());
+            painter.line_segment([center, target], Stroke::new(1.0_f32, color.gamma_multiply(0.6)));
+        }
     }
 }
 

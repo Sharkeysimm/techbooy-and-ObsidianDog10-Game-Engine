@@ -10,7 +10,7 @@ use crate::hierarchy::HierarchyState;
 use crate::physics::PhysicsSystem;
 use crate::scene::Scene;
 use crate::storage;
-use crate::script::ScriptRuntime;
+use crate::script::{MouseButton, ScriptRuntime};
 use crate::theme;
 use crate::viewport::{ViewMode, ViewportState};
 use crate::{drag, hierarchy, inspector, viewport};
@@ -409,7 +409,25 @@ impl Editor {
             } else {
                 ctx.input(|i| i.keys_down.clone())
             };
-            self.scripts.update(&mut self.scene, held, frame_time);
+            // clicks only count when the pointer is over a view
+            let mouse: HashSet<MouseButton> = if self.scene.mouse_in_view {
+                ctx.input(|i| {
+                    let mut buttons = HashSet::new();
+                    if i.pointer.primary_down() {
+                        buttons.insert(MouseButton::Left);
+                    }
+                    if i.pointer.secondary_down() {
+                        buttons.insert(MouseButton::Right);
+                    }
+                    if i.pointer.middle_down() {
+                        buttons.insert(MouseButton::Middle);
+                    }
+                    buttons
+                })
+            } else {
+                HashSet::new()
+            };
+            self.scripts.update(&mut self.scene, held, mouse, frame_time);
 
             // a script asked to change scene so swap it in and start over
             if let Some(path) = self.scene.pending_scene.take() {

@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 use crate::assets::{image_uri, is_image, is_text_script, is_vscript};
 use crate::drag::AssetPayload;
 use crate::game_object::{
-    BodyType, Camera2D, Collider2D, ColliderShape, GameObject, Rigidbody2D, Shape, ShapeRenderer,
-    SpriteRenderer, TextScript, TextureFilter,
+    BodyType, Camera2D, Collider2D, ColliderShape, GameObject, HingeJoint2D, Rigidbody2D, Shape,
+    ShapeRenderer, SpriteRenderer, TextScript, TextureFilter,
 };
 use crate::scene::Scene;
 use crate::script::ScriptGraph;
@@ -35,6 +35,14 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, mode: &mut ViewMode) {
                 .and_then(|p| scene.get(p))
                 .map(|p| p.name.clone());
 
+            // objects a hinge can be connected to
+            let others: Vec<(u64, String)> = scene
+                .objects
+                .iter()
+                .filter(|o| o.id != id)
+                .map(|o| (o.id, o.name.clone()))
+                .collect();
+
             let Some(object) = scene.get_mut(id) else {
                 return;
             };
@@ -48,7 +56,7 @@ pub fn show(ctx: &egui::Context, scene: &mut Scene, mode: &mut ViewMode) {
                 ));
                 ui.separator();
 
-                components(ui, object, mode, &mut open_text);
+                components(ui, object, mode, &mut open_text, &others);
             });
         });
 
@@ -80,6 +88,7 @@ fn components(
     object: &mut GameObject,
     mode: &mut ViewMode,
     open_text: &mut Option<PathBuf>,
+    others: &[(u64, String)],
 ) {
     let id = object.id;
     let mut remove_shape = false;
@@ -89,6 +98,7 @@ fn components(
     let mut remove_collider = false;
     let mut remove_script = false;
     let mut remove_text_script = false;
+    let mut remove_hinge = false;
 
     component(ui, ("transform", id), "Transform", false, |ui| {
         let t = &mut object.transform;
@@ -276,6 +286,63 @@ fn components(
         });
     }
 
+    let has_body = object.rigidbody.is_some() && object.collider.is_some();
+    if let Some(hinge) = object.hinge.as_mut() {
+        remove_hinge = component(ui, ("hinge", id), "Hinge Joint 2D", true, |ui| {
+            let shown = match hinge.connected {
+                None => "World".to_string(),
+                Some(other) => others
+                    .iter()
+                    .find(|(other_id, _)| *other_id == other)
+                    .map(|(_, name)| name.clone())
+                    .unwrap_or_else(|| "missing".to_string()),
+            };
+
+            egui::ComboBox::from_label("Connected")
+                .selected_text(shown)
+                .show_ui(ui, |ui| {
+                    ui.selectable_value(&mut hinge.connected, None, "World");
+                    for (other_id, name) in others {
+                        ui.selectable_value(&mut hinge.connected, Some(*other_id), name.as_str());
+                    }
+                });
+
+            ui.horizontal(|ui| {
+                ui.label("Anchor");
+                ui.add(egui::DragValue::new(&mut hinge.anchor_x).prefix("X ").speed(0.01));
+                ui.add(egui::DragValue::new(&mut hinge.anchor_y).prefix("Y ").speed(0.01));
+            });
+
+            ui.checkbox(&mut hinge.use_limits, "Use limits");
+            if hinge.use_limits {
+                ui.horizontal(|ui| {
+                    ui.add(
+                        egui::DragValue::new(&mut hinge.lower_angle)
+                            .prefix("Min ")
+                            .suffix("°"),
+                    );
+                    ui.add(
+                        egui::DragValue::new(&mut hinge.upper_angle)
+                            .prefix("Max ")
+                            .suffix("°"),
+                    );
+                });
+            }
+
+            ui.checkbox(&mut hinge.use_motor, "Use motor");
+            if hinge.use_motor {
+                ui.horizontal(|ui| {
+                    ui.label("Speed");
+                    ui.add(egui::DragValue::new(&mut hinge.motor_speed).suffix(" deg/s"));
+                });
+            }
+
+            if !has_body {
+                ui.colored_label(Color32::YELLOW, "needs a Rigidbody 2D and a collider");
+            }
+        });
+    }
+
     if let Some(script) = object.text_script.as_mut() {
         let mut open = false;
 
@@ -307,6 +374,9 @@ fn components(
 
     if remove_text_script {
         object.text_script = None;
+    }
+    if remove_hinge {
+        object.hinge = None;
     }
     if remove_script {
         object.script = None;
@@ -379,6 +449,14 @@ fn add_component_menu(ui: &mut egui::Ui, object: &mut GameObject) {
                 .clicked()
             {
                 object.rigidbody = Some(Rigidbody2D::default());
+                ui.close_menu();
+            }
+
+            if ui
+                .add_enabled(object.hinge.is_none(), egui::Button::new("Hinge Joint 2D"))
+                .clicked()
+            {
+                object.hinge = Some(HingeJoint2D::default());
                 ui.close_menu();
             }
 

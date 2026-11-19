@@ -4,6 +4,7 @@ use std::collections::HashSet;
 use std::path::Path;
 
 use crate::collision;
+use crate::game_object::BodyType;
 use crate::scene::Scene;
 use crate::storage;
 
@@ -36,6 +37,17 @@ impl Compare {
     pub const ALL: [Compare; 2] = [Compare::Less, Compare::Greater];
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum MouseButton {
+    Left,
+    Right,
+    Middle,
+}
+
+impl MouseButton {
+    pub const ALL: [MouseButton; 3] = [MouseButton::Left, MouseButton::Right, MouseButton::Middle];
+}
+
 #[derive(Clone, Copy, PartialEq)]
 pub enum Category {
     Event,
@@ -62,6 +74,13 @@ pub enum NodeKind {
     OnCollide { with: String },
     WhileColliding { with: String },
     OnStopColliding { with: String },
+    OnMousePressed { button: MouseButton },
+    WhileMouseHeld { button: MouseButton },
+    OnMouseReleased { button: MouseButton },
+    TurnTowardMouse { speed: f32, gain: f32, offset: f32 },
+    MoveTowardMouse { speed: f32 },
+    MoveToMouse,
+    PointAtMouse { offset: f32 },
     Move { x: f32, y: f32 },
     Rotate { degrees: f32 },
     SetPosition { x: f32, y: f32 },
@@ -98,6 +117,13 @@ impl NodeKind {
             NodeKind::OnCollide { .. } => "On Collide",
             NodeKind::WhileColliding { .. } => "While Colliding",
             NodeKind::OnStopColliding { .. } => "On Stop Colliding",
+            NodeKind::OnMousePressed { .. } => "On Mouse Pressed",
+            NodeKind::WhileMouseHeld { .. } => "While Mouse Held",
+            NodeKind::OnMouseReleased { .. } => "On Mouse Released",
+            NodeKind::TurnTowardMouse { .. } => "Turn Toward Mouse",
+            NodeKind::MoveTowardMouse { .. } => "Move Toward Mouse",
+            NodeKind::MoveToMouse => "Move To Mouse",
+            NodeKind::PointAtMouse { .. } => "Point At Mouse",
             NodeKind::Move { .. } => "Move",
             NodeKind::Rotate { .. } => "Rotate",
             NodeKind::SetPosition { .. } => "Set Position",
@@ -126,7 +152,10 @@ impl NodeKind {
             | NodeKind::OnKeyReleased { .. }
             | NodeKind::OnCollide { .. }
             | NodeKind::WhileColliding { .. }
-            | NodeKind::OnStopColliding { .. } => Category::Event,
+            | NodeKind::OnStopColliding { .. }
+            | NodeKind::OnMousePressed { .. }
+            | NodeKind::WhileMouseHeld { .. }
+            | NodeKind::OnMouseReleased { .. } => Category::Event,
             NodeKind::IfKey { .. } | NodeKind::IfCompare { .. } => Category::Flow,
             _ => Category::Action,
         }
@@ -164,11 +193,28 @@ impl NodeKind {
                     NodeKind::OnStopColliding {
                         with: String::new(),
                     },
+                    NodeKind::OnMousePressed {
+                        button: MouseButton::Left,
+                    },
+                    NodeKind::WhileMouseHeld {
+                        button: MouseButton::Left,
+                    },
+                    NodeKind::OnMouseReleased {
+                        button: MouseButton::Left,
+                    },
                 ],
             ),
             (
                 "Actions",
                 vec![
+                    NodeKind::TurnTowardMouse {
+                        speed: 360.0,
+                        gain: 8.0,
+                        offset: 0.0,
+                    },
+                    NodeKind::MoveTowardMouse { speed: 300.0 },
+                    NodeKind::MoveToMouse,
+                    NodeKind::PointAtMouse { offset: 0.0 },
                     NodeKind::Move { x: 100.0, y: 0.0 },
                     NodeKind::Rotate { degrees: 90.0 },
                     NodeKind::SetPosition { x: 0.0, y: 0.0 },
@@ -320,6 +366,9 @@ struct Input {
     held: HashSet<Key>,
     pressed: HashSet<Key>,
     released: HashSet<Key>,
+    mouse_held: HashSet<MouseButton>,
+    mouse_pressed: HashSet<MouseButton>,
+    mouse_released: HashSet<MouseButton>,
 }
 
 // pairs are (this object, other object) and both directions are listed
@@ -340,6 +389,7 @@ struct Pending {
 pub struct ScriptRuntime {
     started: HashSet<u64>,
     previous: HashSet<Key>,
+    previous_mouse: HashSet<MouseButton>,
     touching: HashSet<(u64, u64)>,
     pending: Vec<Pending>,
 }
@@ -351,6 +401,7 @@ impl ScriptRuntime {
         Self {
             started: HashSet::new(),
             previous: HashSet::new(),
+            previous_mouse: HashSet::new(),
             touching: HashSet::new(),
             pending: Vec::new(),
         }
@@ -359,18 +410,34 @@ impl ScriptRuntime {
     pub fn reset(&mut self) {
         self.started.clear();
         self.previous.clear();
+        self.previous_mouse.clear();
         self.touching.clear();
         self.pending.clear();
     }
 
-    pub fn update(&mut self, scene: &mut Scene, held: HashSet<Key>, dt: f32) {
+    pub fn update(
+        &mut self,
+        scene: &mut Scene,
+        held: HashSet<Key>,
+        mouse: HashSet<MouseButton>,
+        dt: f32,
+    ) {
         let pressed: HashSet<Key> = held.difference(&self.previous).copied().collect();
         let released: HashSet<Key> = self.previous.difference(&held).copied().collect();
         self.previous = held.clone();
+        let mouse_pressed: HashSet<MouseButton> =
+            mouse.difference(&self.previous_mouse).copied().collect();
+        let mouse_released: HashSet<MouseButton> =
+            self.previous_mouse.difference(&mouse).copied().collect();
+        self.previous_mouse = mouse.clone();
+
         let input = Input {
             held,
             pressed,
             released,
+            mouse_held: mouse,
+            mouse_pressed,
+            mouse_released,
         };
 
         let now = collision::touching_pairs(scene);
@@ -461,6 +528,9 @@ impl ScriptRuntime {
                 NodeKind::WhileKey { key } => flag(input.held.contains(key)),
                 NodeKind::OnKeyPressed { key } => flag(input.pressed.contains(key)),
                 NodeKind::OnKeyReleased { key } => flag(input.released.contains(key)),
+                NodeKind::OnMousePressed { button } => flag(input.mouse_pressed.contains(button)),
+                NodeKind::WhileMouseHeld { button } => flag(input.mouse_held.contains(button)),
+                NodeKind::OnMouseReleased { button } => flag(input.mouse_released.contains(button)),
                 NodeKind::OnCollide { with } => others(scene, &collisions.enter, id, with),
                 NodeKind::WhileColliding { with } => others(scene, &collisions.stay, id, with),
                 NodeKind::OnStopColliding { with } => others(scene, &collisions.exit, id, with),
@@ -575,6 +645,24 @@ impl ScriptRuntime {
                     }
                     break;
                 }
+                NodeKind::TurnTowardMouse {
+                    speed,
+                    gain,
+                    offset,
+                } => turn_toward_mouse(scene, id, *speed, *gain, *offset, dt),
+                NodeKind::MoveTowardMouse { speed } => move_toward_mouse(scene, id, *speed, dt),
+                NodeKind::MoveToMouse => {
+                    if let Some(mouse) = scene.mouse_world {
+                        scene.set_world_position(id, mouse);
+                    }
+                }
+                NodeKind::PointAtMouse { offset } => {
+                    if let Some(mouse) = scene.mouse_world {
+                        let position = scene.world_affine(id).position();
+                        let aim = mouse - position;
+                        scene.set_world_pose(id, position, aim.y.atan2(aim.x) + offset.to_radians());
+                    }
+                }
                 NodeKind::DestroyOther => {
                     if let Some(target) = other {
                         if target != id {
@@ -622,13 +710,83 @@ impl ScriptRuntime {
                 | NodeKind::OnKeyReleased { .. }
                 | NodeKind::OnCollide { .. }
                 | NodeKind::WhileColliding { .. }
-                | NodeKind::OnStopColliding { .. } => {}
+                | NodeKind::OnStopColliding { .. }
+                | NodeKind::OnMousePressed { .. }
+                | NodeKind::WhileMouseHeld { .. }
+                | NodeKind::OnMouseReleased { .. } => {}
             }
 
             current = graph.target(node_id, port);
         }
 
         true
+    }
+}
+
+fn is_dynamic(scene: &Scene, id: u64) -> bool {
+    scene.get(id).is_some_and(|o| {
+        o.collider.is_some() && o.rigidbody.is_some_and(|rb| rb.body == BodyType::Dynamic)
+    })
+}
+
+fn wrap_angle(angle: f32) -> f32 {
+    angle.sin().atan2(angle.cos())
+}
+
+// a body with a hinge swings around the pivot so the aim comes from there
+fn turn_toward_mouse(scene: &mut Scene, id: u64, speed: f32, gain: f32, offset: f32, dt: f32) {
+    let Some(mouse) = scene.mouse_world else {
+        return;
+    };
+    let affine = scene.world_affine(id);
+    let center = affine.position();
+
+    let (current, target) = match scene.hinge_pivot(id) {
+        Some(pivot) if (center - pivot).length() > 1.0 => {
+            let arm = center - pivot;
+            let aim = mouse - pivot;
+            (arm.y.atan2(arm.x), aim.y.atan2(aim.x))
+        }
+        _ => {
+            let aim = mouse - center;
+            (affine.angle(), aim.y.atan2(aim.x))
+        }
+    };
+
+    let error = wrap_angle(target - current + offset.to_radians());
+    let limit = speed.abs().to_radians();
+    let spin = (error * gain).clamp(-limit, limit);
+
+    if is_dynamic(scene, id) {
+        scene.angvel_sets.push((id, spin));
+    } else if let Some(object) = scene.get_mut(id) {
+        object.transform.rotation -= (spin * dt).to_degrees();
+    }
+}
+
+fn move_toward_mouse(scene: &mut Scene, id: u64, speed: f32, dt: f32) {
+    let Some(mouse) = scene.mouse_world else {
+        return;
+    };
+    let position = scene.world_affine(id).position();
+    let offset = mouse - position;
+    let distance = offset.length();
+    let dynamic = is_dynamic(scene, id);
+
+    if distance < 0.5 {
+        if dynamic {
+            scene.velocity_sets.push((id, Some(0.0), Some(0.0)));
+        }
+        return;
+    }
+
+    let direction = offset / distance;
+    if dynamic {
+        let velocity = direction * speed.min(distance * 10.0);
+        scene.velocity_sets.push((id, Some(velocity.x), Some(velocity.y)));
+    } else {
+        let step = (speed * dt).min(distance);
+        scene.set_world_position(id, position + direction * step);
     }
 }
 

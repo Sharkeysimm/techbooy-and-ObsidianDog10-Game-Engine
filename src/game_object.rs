@@ -140,6 +140,39 @@ impl Default for Rigidbody2D {
     }
 }
 
+// pins this body to another body or to a point in the world
+#[derive(Clone, Copy, Serialize, Deserialize)]
+pub struct HingeJoint2D {
+    pub connected: Option<u64>,
+    pub anchor_x: f32,
+    pub anchor_y: f32,
+    #[serde(default)]
+    pub use_limits: bool,
+    #[serde(default)]
+    pub lower_angle: f32,
+    #[serde(default)]
+    pub upper_angle: f32,
+    #[serde(default)]
+    pub use_motor: bool,
+    #[serde(default)]
+    pub motor_speed: f32,
+}
+
+impl Default for HingeJoint2D {
+    fn default() -> Self {
+        Self {
+            connected: None,
+            anchor_x: 0.0,
+            anchor_y: 0.0,
+            use_limits: false,
+            lower_angle: -45.0,
+            upper_angle: 45.0,
+            use_motor: false,
+            motor_speed: 90.0,
+        }
+    }
+}
+
 #[derive(Clone, Copy, Serialize, Deserialize)]
 pub struct Collider2D {
     pub shape: ColliderShape,
@@ -211,6 +244,8 @@ pub struct GameObject {
     pub script: Option<ScriptGraph>,
     #[serde(default)]
     pub text_script: Option<TextScript>,
+    #[serde(default)]
+    pub hinge: Option<HingeJoint2D>,
 }
 
 impl GameObject {
@@ -228,6 +263,7 @@ impl GameObject {
             collider: None,
             script: None,
             text_script: None,
+            hinge: None,
         }
     }
 

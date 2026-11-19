@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use crate::assets::is_vscript;
 use crate::drag::AssetPayload;
 use crate::scene::Scene;
-use crate::script::{Category, Compare, Node, NodeKind, Property, ScriptGraph};
+use crate::script::{Category, Compare, MouseButton, Node, NodeKind, Property, ScriptGraph};
 use crate::storage;
 
 const NODE_W: f32 = 210.0;
@@ -639,9 +639,51 @@ fn params(ui: &mut egui::Ui, salt: Id, kind: &mut NodeKind, capture: &mut KeyCap
                     }
                 });
         }
+        NodeKind::OnMousePressed { button }
+        | NodeKind::WhileMouseHeld { button }
+        | NodeKind::OnMouseReleased { button } => {
+            egui::ComboBox::from_id_salt(salt.with("button"))
+                .selected_text(format!("{button:?}"))
+                .show_ui(ui, |ui| {
+                    for option in MouseButton::ALL {
+                        ui.selectable_value(button, option, format!("{option:?}"));
+                    }
+                });
+        }
+        NodeKind::TurnTowardMouse {
+            speed,
+            gain,
+            offset,
+        } => {
+            ui.horizontal(|ui| {
+                ui.label("Max speed");
+                ui.add(egui::DragValue::new(speed).speed(1.0).suffix(" deg/s"));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Gain");
+                ui.add(egui::DragValue::new(gain).speed(0.1));
+            });
+            ui.horizontal(|ui| {
+                ui.label("Offset");
+                ui.add(egui::DragValue::new(offset).speed(1.0).suffix(" deg"));
+            });
+        }
+        NodeKind::MoveTowardMouse { speed } => {
+            ui.horizontal(|ui| {
+                ui.label("Speed");
+                ui.add(egui::DragValue::new(speed).speed(1.0));
+            });
+        }
+        NodeKind::PointAtMouse { offset } => {
+            ui.horizontal(|ui| {
+                ui.label("Offset");
+                ui.add(egui::DragValue::new(offset).speed(1.0).suffix(" deg"));
+            });
+        }
         NodeKind::OnStart
         | NodeKind::EveryFrame
         | NodeKind::Destroy
+        | NodeKind::MoveToMouse
         | NodeKind::DestroyOther => {}
     }
 }

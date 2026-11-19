@@ -6,7 +6,7 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use crate::assets::{is_image, is_prefab, is_scene, is_text_script, ROOT, TEXT_SCRIPT_EXT};
-use crate::game_object::{GameObject, Transform};
+use crate::game_object::{GameObject, HingeJoint2D, Transform};
 use crate::scene::Scene;
 use crate::script::ScriptGraph;
 
@@ -116,6 +116,16 @@ pub fn instantiate(
 
         if let Some(copy) = scene.get_mut(new_id) {
             copy.parent = new_parent;
+
+            // a hinge to something outside the prefab is dropped instead of pinned to the world
+            if let Some(hinge) = copy.hinge {
+                if let Some(old) = hinge.connected {
+                    copy.hinge = ids.get(&old).map(|new| HingeJoint2D {
+                        connected: Some(*new),
+                        ..hinge
+                    });
+                }
+            }
         }
     }
 
